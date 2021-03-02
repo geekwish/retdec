@@ -6,6 +6,7 @@
 
 #include "retdec/utils/array.h"
 #include "retdec/utils/conversion.h"
+#include "retdec/utils/string.h"
 #include "retdec/fileformat/types/symbol_table/elf_symbol.h"
 #include "retdec/fileformat/utils/other.h"
 #include "fileinfo/file_detector/elf_detector.h"
@@ -15,6 +16,7 @@ using namespace ELFIO;
 using namespace retdec::cpdetect;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -546,7 +548,7 @@ std::string getSymbolLinkToSection(unsigned long long link)
 		case SHN_XINDEX:
 			return "XINDEX";
 		default:
-			return numToStr(link);
+			return std::to_string(link);
 	}
 }
 
@@ -770,19 +772,15 @@ std::string getNoteDescription(
  * @param searchPar Parameters for detection of used compiler (or packer)
  * @param loadFlags Load flags
  */
-ElfDetector::ElfDetector(std::string pathToInputFile, FileInformation &finfo, retdec::cpdetect::DetectParams &searchPar, retdec::fileformat::LoadFlags loadFlags) :
-	FileDetector(pathToInputFile, finfo, searchPar, loadFlags)
+ElfDetector::ElfDetector(
+		std::string pathToInputFile,
+		FileInformation &finfo,
+		retdec::cpdetect::DetectParams &searchPar,
+		retdec::fileformat::LoadFlags loadFlags)
+		: FileDetector(pathToInputFile, finfo, searchPar, loadFlags)
 {
 	fileParser = elfParser = std::make_shared<ElfWrapper>(fileInfo.getPathToFile(), loadFlags);
 	loaded = elfParser->isInValidState();
-}
-
-/**
- * Destructor
- */
-ElfDetector::~ElfDetector()
-{
-
 }
 
 /**
@@ -790,7 +788,7 @@ ElfDetector::~ElfDetector()
  */
 void ElfDetector::getFileVersion()
 {
-	fileInfo.setFileVersion(numToStr(elfParser->getFileVersion()));
+	fileInfo.setFileVersion(std::to_string(elfParser->getFileVersion()));
 }
 
 /**
@@ -798,7 +796,7 @@ void ElfDetector::getFileVersion()
  */
 void ElfDetector::getFileHeaderInfo()
 {
-	fileInfo.setFileHeaderVersion(numToStr(elfParser->getFileHeaderVersion()));
+	fileInfo.setFileHeaderVersion(std::to_string(elfParser->getFileHeaderVersion()));
 	fileInfo.setFileHeaderSize(elfParser->getFileHeaderSize());
 }
 
@@ -1201,7 +1199,7 @@ void ElfDetector::getCoreInfo()
 		auto name = mapGetValueOrDefault(auxVecMap, entry.first, "");
 		if(name.empty())
 		{
-			name = "UNKNOWN " + toString(entry.first);
+			name = "UNKNOWN " + std::to_string(entry.first);
 		}
 		fileInfo.addAuxVectorEntry(name, entry.second);
 	}
@@ -1287,7 +1285,7 @@ void ElfDetector::getOsAbiInfo()
 		abi = "Architecture-specific ABI extension";
 	}
 	fileInfo.setOsAbi(abi);
-	fileInfo.setOsAbiVersion(numToStr(abiVersion));
+	fileInfo.setOsAbiVersion(std::to_string(abiVersion));
 }
 
 /**
@@ -1355,7 +1353,7 @@ void ElfDetector::getOsAbiInfoNote()
 				if(elfParser->get4ByteOffset(notes[0].dataOffset, result))
 				{
 					fileInfo.setOsAbi("Android");
-					fileInfo.setOsAbiVersion(numToStr(result));
+					fileInfo.setOsAbiVersion(std::to_string(result));
 					return;
 				}
 			}
@@ -1972,7 +1970,8 @@ void ElfDetector::getAdditionalInfo()
  */
 retdec::cpdetect::CompilerDetector* ElfDetector::createCompilerDetector() const
 {
-	return new ElfCompiler(*elfParser, cpParams, fileInfo.toolInfo);
+	return new CompilerDetector(*elfParser, cpParams, fileInfo.toolInfo);
 }
 
 } // namespace fileinfo
+} // namespace retdec

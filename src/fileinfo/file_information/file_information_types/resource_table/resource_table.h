@@ -12,6 +12,7 @@
 #include "retdec/fileformat/types/resource_table/resource_table.h"
 #include "fileinfo/file_information/file_information_types/resource_table/resource.h"
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -23,11 +24,8 @@ namespace fileinfo {
 class ResourceTable
 {
 	private:
-		const retdec::fileformat::ResourceTable *table;
+		const retdec::fileformat::ResourceTable *table = nullptr;
 	public:
-		ResourceTable();
-		~ResourceTable();
-
 		/// @name Getters
 		/// @{
 		std::size_t getNumberOfResources() const;
@@ -69,5 +67,6 @@ class ResourceTable
 };
 
 } // namespace fileinfo
+} // namespace retdec
 
 #endif

@@ -7,12 +7,12 @@
 #include <sstream>
 
 #include <llvm/Object/COFF.h>
-#include <pelib/PeLibInc.h>
 
+#include "fileinfo/file_detector/coff_detector.h"
 #include "retdec/utils/array.h"
 #include "retdec/utils/conversion.h"
 #include "retdec/fileformat/utils/other.h"
-#include "fileinfo/file_detector/coff_detector.h"
+#include "retdec/pelib/PeLibInc.h"
 
 using namespace retdec::utils;
 using namespace llvm;
@@ -21,6 +21,7 @@ using namespace PeLib;
 using namespace retdec::cpdetect;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace {
@@ -49,7 +50,7 @@ std::string getSymbolLinkToSection(std::int16_t link)
 		return "DEBUG";
 	}
 
-	return numToStr(link - 1);
+	return std::to_string(link - 1);
 }
 
 /**
@@ -88,19 +89,15 @@ std::string getSymbolType(std::uint8_t type)
  * @param searchPar Parameters for detection of used compiler (or packer)
  * @param loadFlags Load flags
  */
-CoffDetector::CoffDetector(std::string pathToInputFile, FileInformation &finfo, retdec::cpdetect::DetectParams &searchPar, retdec::fileformat::LoadFlags loadFlags) :
-	FileDetector(pathToInputFile, finfo, searchPar, loadFlags)
+CoffDetector::CoffDetector(
+		std::string pathToInputFile,
+		FileInformation &finfo,
+		retdec::cpdetect::DetectParams &searchPar,
+		retdec::fileformat::LoadFlags loadFlags)
+		: FileDetector(pathToInputFile, finfo, searchPar, loadFlags)
 {
 	fileParser = coffParser = std::make_shared<CoffWrapper>(fileInfo.getPathToFile(), loadFlags);
 	loaded = coffParser->isInValidState();
-}
-
-/**
- * Destructor
- */
-CoffDetector::~CoffDetector()
-{
-
 }
 
 /**
@@ -528,7 +525,8 @@ void CoffDetector::getAdditionalInfo()
  */
 retdec::cpdetect::CompilerDetector* CoffDetector::createCompilerDetector() const
 {
-	return new CoffCompiler(*coffParser, cpParams, fileInfo.toolInfo);
+	return new CompilerDetector(*coffParser, cpParams, fileInfo.toolInfo);
 }
 
 } // namespace fileinfo
+} // namespace retdec

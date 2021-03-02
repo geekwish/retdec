@@ -13,6 +13,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -49,14 +50,6 @@ SectionPlainGetter::SectionPlainGetter(FileInformation &fileInfo) : IterativeDis
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-SectionPlainGetter::~SectionPlainGetter()
-{
-
-}
-
 std::size_t SectionPlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.getNumberOfStoredSections())
@@ -71,7 +64,7 @@ std::size_t SectionPlainGetter::getBasicInfo(std::size_t structIndex, std::vecto
 	desc.push_back("CRC32             : ");
 	desc.push_back("MD5               : ");
 	desc.push_back("SHA256            : ");
-	info.push_back(numToStr(fileinfo.getNumberOfStoredSections()));
+	info.push_back(std::to_string(fileinfo.getNumberOfStoredSections()));
 	info.push_back(fileinfo.getSectionTableCrc32());
 	info.push_back(fileinfo.getSectionTableMd5());
 	info.push_back(fileinfo.getSectionTableSha256());
@@ -135,3 +128,4 @@ bool SectionPlainGetter::getFlagDescriptors(std::size_t structIndex, std::vector
 }
 
 } // namespace fileinfo
+} // namespace retdec

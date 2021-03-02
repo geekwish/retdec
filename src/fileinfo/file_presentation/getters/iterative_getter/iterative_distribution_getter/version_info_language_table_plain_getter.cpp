@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -39,14 +40,6 @@ VersionInfoLanguageTablePlainGetter::VersionInfoLanguageTablePlainGetter(FileInf
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-VersionInfoLanguageTablePlainGetter::~VersionInfoLanguageTablePlainGetter()
-{
-
-}
-
 std::size_t VersionInfoLanguageTablePlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.getNumberOfVersionInfoLanguages())
@@ -58,7 +51,7 @@ std::size_t VersionInfoLanguageTablePlainGetter::getBasicInfo(std::size_t struct
 	info.clear();
 
 	desc.push_back("Number of languages: ");
-	info.push_back(numToStr(fileinfo.getNumberOfVersionInfoLanguages()));
+	info.push_back(std::to_string(fileinfo.getNumberOfVersionInfoLanguages()));
 
 	return info.size();
 }
@@ -71,7 +64,7 @@ bool VersionInfoLanguageTablePlainGetter::loadRecord(std::size_t structIndex, st
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(fileinfo.getVersionInfoLanguageLcid(recIndex));
 	record.push_back(fileinfo.getVersionInfoLanguageCodePage(recIndex));
 	return true;
@@ -91,3 +84,4 @@ bool VersionInfoLanguageTablePlainGetter::getFlagDescriptors(std::size_t structI
 }
 
 } // namespace fileinfo
+} // namespace retdec

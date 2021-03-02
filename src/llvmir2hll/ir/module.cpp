@@ -49,11 +49,6 @@ Module::Module(const llvm::Module *llvmModule, const std::string &identifier,
 	}
 
 /**
-* @brief Destructs the module.
-*/
-Module::~Module() {}
-
-/**
 * @brief Adds a new global variable to the module.
 *
 * @param[in] var Variable to be added.
@@ -225,6 +220,10 @@ ShPtr<Semantics> Module::getSemantics() const {
 	return semantics;
 }
 
+ShPtr<Config> Module::getConfig() const {
+	return config;
+}
+
 /**
 * @brief Returns @c true if the module contains at least one global variable,
 *        @c false otherwise.
@@ -372,6 +371,29 @@ std::size_t Module::getNumOfFuncDefinitions() const {
 bool Module::hasFuncDefinitions() const {
 	return std::any_of(funcs.begin(), funcs.end(),
 		[](const auto &func) { return func->isDefinition(); }
+	);
+}
+
+/**
+* @brief Are there any decompiler-defined functions in the module?
+*/
+bool Module::hasDecompilerDefinedFuncs() const {
+	for (auto &func : funcs) {
+		if (config->isDecompilerDefinedFunc(func->getInitialName())) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+* @brief Returns all decompiler-defined functions in the module.
+*/
+FuncSet Module::getDecompilerDefinedFuncs() const {
+	return getFuncsSatisfyingPredicate(
+		[this](auto func) {
+			return config->isDecompilerDefinedFunc(func->getInitialName());
+		}
 	);
 }
 
@@ -565,14 +587,6 @@ std::string Module::getDemangledNameOfFunc(ShPtr<Function> func) const {
 }
 
 /**
-* @brief Returns a set of names of functions that were fixed by our LLVM-IR
-*        fixer.
-*/
-StringSet Module::getNamesOfFuncsFixedWithLLVMIRFixer() const {
-	return config->getFuncsFixedWithLLVMIRFixer();
-}
-
-/**
 * @brief Returns a constant iterator to the first function.
 */
 Module::func_iterator Module::func_begin() const {
@@ -625,7 +639,7 @@ Module::func_filter_iterator Module::func_declaration_end() const {
 *
 * If there is no address range for @a func, @c NO_ADDRESS_RANGE is returned.
 */
-AddressRange Module::getAddressRangeForFunc(ShPtr<Function> func) const {
+AddressRange Module::getAddressRangeForFunc(ShPtr<const Function> func) const {
 	return config->getAddressRangeForFunc(func->getInitialName());
 }
 
@@ -840,15 +854,6 @@ bool Module::hasAssignedDebugName(ShPtr<Variable> var) const {
 */
 void Module::addDebugNameForVar(ShPtr<Variable> var, const std::string &name) {
 	debugVarNameMap[var] = name;
-}
-
-/**
-* @brief Returns the release of the front-end.
-*
-* If there is no release, it returns the empty string.
-*/
-std::string Module::getFrontendRelease() const {
-	return config->getFrontendRelease();
 }
 
 /**

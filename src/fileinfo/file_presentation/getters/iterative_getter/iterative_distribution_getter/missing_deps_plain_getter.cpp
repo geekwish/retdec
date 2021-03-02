@@ -13,6 +13,7 @@
 
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -40,13 +41,6 @@ MissingDepsPlainGetter::MissingDepsPlainGetter(FileInformation &fileInfo) : Iter
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-MissingDepsPlainGetter::~MissingDepsPlainGetter()
-{
-}
-
 std::size_t MissingDepsPlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures)
@@ -55,7 +49,7 @@ std::size_t MissingDepsPlainGetter::getBasicInfo(std::size_t structIndex, std::v
 	}
 
 	desc.push_back("Number of missing dependencies: ");
-	info.push_back(retdec::utils::numToStr(fileinfo.getNumberOfMissingDeps()));
+	info.push_back(std::to_string(fileinfo.getNumberOfMissingDeps()));
 	return info.size();
 }
 
@@ -67,7 +61,7 @@ bool MissingDepsPlainGetter::loadRecord(std::size_t structIndex, std::size_t rec
 	}
 
 	record.clear();
-	record.push_back(retdec::utils::numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(retdec::utils::replaceNonprintableChars(fileinfo.getMissingDepName(recIndex)));
 	return true;
 }
@@ -82,3 +76,4 @@ bool MissingDepsPlainGetter::getFlagDescriptors(std::size_t structIndex, std::ve
 }
 
 } // namespace fileinfo
+} // namespace retdec

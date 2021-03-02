@@ -5,7 +5,6 @@
  */
 
 #include <iomanip>
-#include <iostream>
 
 #include "capstone2llvmir/x86/x86_impl.h"
 
@@ -23,11 +22,6 @@ Capstone2LlvmIrTranslatorX86_impl::Capstone2LlvmIrTranslatorX86_impl(
 	// This needs to be called from concrete's class ctor, not abstract's
 	// class ctor, so that virtual table is properly initialized.
 	initialize();
-}
-
-Capstone2LlvmIrTranslatorX86_impl::~Capstone2LlvmIrTranslatorX86_impl()
-{
-	// Nothing specific to x86.
 }
 
 //
@@ -104,9 +98,7 @@ bool Capstone2LlvmIrTranslatorX86_impl::isAnyPseudoFunction(llvm::Function* f) c
 {
 	return Capstone2LlvmIrTranslator_impl::isAnyPseudoFunction(f)
 			|| isX87DataStoreFunction(f)
-			|| isX87TagStoreFunction(f)
-			|| isX87DataLoadFunction(f)
-			|| isX87TagLoadFunction(f);
+			|| isX87DataLoadFunction(f);
 }
 
 bool Capstone2LlvmIrTranslatorX86_impl::isAnyPseudoFunctionCall(
@@ -114,9 +106,7 @@ bool Capstone2LlvmIrTranslatorX86_impl::isAnyPseudoFunctionCall(
 {
 	return Capstone2LlvmIrTranslator_impl::isAnyPseudoFunctionCall(c)
 			|| isX87DataStoreFunctionCall(c)
-			|| isX87TagStoreFunctionCall(c)
-			|| isX87DataLoadFunctionCall(c)
-			|| isX87TagLoadFunctionCall(c);
+			|| isX87DataLoadFunctionCall(c);
 }
 
 //
@@ -140,21 +130,6 @@ llvm::Function* Capstone2LlvmIrTranslatorX86_impl::getX87DataStoreFunction() con
 	return _x87DataStoreFunction;
 }
 
-bool Capstone2LlvmIrTranslatorX86_impl::isX87TagStoreFunction(llvm::Function* f) const
-{
-	return f == _x87TagStoreFunction;
-}
-
-bool Capstone2LlvmIrTranslatorX86_impl::isX87TagStoreFunctionCall(llvm::CallInst* c) const
-{
-	return c && isX87TagStoreFunction(c->getCalledFunction());
-}
-
-llvm::Function* Capstone2LlvmIrTranslatorX86_impl::getX87TagStoreFunction() const
-{
-	return _x87TagStoreFunction;
-}
-
 bool Capstone2LlvmIrTranslatorX86_impl::isX87DataLoadFunction(llvm::Function* f) const
 {
 	return f == _x87DataLoadFunction;
@@ -168,21 +143,6 @@ bool Capstone2LlvmIrTranslatorX86_impl::isX87DataLoadFunctionCall(llvm::CallInst
 llvm::Function* Capstone2LlvmIrTranslatorX86_impl::getX87DataLoadFunction() const
 {
 	return _x87DataLoadFunction;
-}
-
-bool Capstone2LlvmIrTranslatorX86_impl::isX87TagLoadFunction(llvm::Function* f) const
-{
-	return f == _x87TagLoadFunction;
-}
-
-bool Capstone2LlvmIrTranslatorX86_impl::isX87TagLoadFunctionCall(llvm::CallInst* c) const
-{
-	return c && isX87TagLoadFunction(c->getCalledFunction());
-}
-
-llvm::Function* Capstone2LlvmIrTranslatorX86_impl::getX87TagLoadFunction() const
-{
-	return _x87TagLoadFunction;
 }
 
 /**
@@ -300,35 +260,12 @@ void Capstone2LlvmIrTranslatorX86_impl::generateX87RegLoadStoreFunctions()
 			"",
 			_module);
 
-	std::vector<llvm::Type*> tsp = {
-			llvm::Type::getIntNTy(_module->getContext(), 3),
-			llvm::Type::getIntNTy(_module->getContext(), 2)};
-	auto* tsft = llvm::FunctionType::get(
-			llvm::Type::getVoidTy(_module->getContext()),
-			tsp,
-			false);
-	_x87TagStoreFunction = llvm::Function::Create(
-			tsft,
-			llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-			"",
-			_module);
-
 	auto* dlft = llvm::FunctionType::get(
 			llvm::Type::getX86_FP80Ty(_module->getContext()),
 			{llvm::Type::getIntNTy(_module->getContext(), 3)},
 			false);
 	_x87DataLoadFunction = llvm::Function::Create(
 			dlft,
-			llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-			"",
-			_module);
-
-	auto* tlft = llvm::FunctionType::get(
-			llvm::Type::getIntNTy(_module->getContext(), 2),
-			{llvm::Type::getIntNTy(_module->getContext(), 3)},
-			false);
-	_x87TagLoadFunction = llvm::Function::Create(
-			tlft,
 			llvm::GlobalValue::LinkageTypes::ExternalLinkage,
 			"",
 			_module);
@@ -453,17 +390,6 @@ void Capstone2LlvmIrTranslatorX86_impl::generateRegistersCommon()
 	createRegister(X87_REG_PC, _regLt);
 	createRegister(X87_REG_RC, _regLt);
 	createRegister(X87_REG_X, _regLt);
-
-	// x87 FPU tag registers (x87_reg_tag).
-	//
-	createRegister(X87_REG_TAG0, _regLt);
-	createRegister(X87_REG_TAG1, _regLt);
-	createRegister(X87_REG_TAG2, _regLt);
-	createRegister(X87_REG_TAG3, _regLt);
-	createRegister(X87_REG_TAG4, _regLt);
-	createRegister(X87_REG_TAG5, _regLt);
-	createRegister(X87_REG_TAG6, _regLt);
-	createRegister(X87_REG_TAG7, _regLt);
 
 	// 64-bit FP registers.
 	//
@@ -1006,47 +932,8 @@ llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::storeX87DataReg(
 		throw GenericError("Bad operands of storeX87DataReg().");
 	}
 
-	auto* i2 = irb.getIntNTy(2);
-	auto* isZero = irb.CreateFCmpOEQ(val, llvm::ConstantFP::get(val->getType(), 0));
-	auto* tmp = llvm::ConstantInt::get(i2, 0); // TODO: this is not complete
-	auto* tagVal = irb.CreateSelect(
-			isZero,
-			llvm::ConstantInt::get(i2, 1), // 01 - zero
-			tmp);                          // 00 - valid
-	storeX87TagReg(irb, rNum, tagVal);
-
 	std::vector<llvm::Value*> ps = {rNum, val};
 	return irb.CreateCall(getX87DataStoreFunction(), ps);
-}
-
-/**
- * 00 - valid
- * 01 - zero
- * 10 - special, invalid (Nan, unsupported), infinity, denormal
- * 11 - empty
- */
-llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::storeX87TagReg(
-		llvm::IRBuilder<>& irb,
-		llvm::Value* rNum,
-		llvm::Value* val)
-{
-	if (!rNum->getType()->isIntegerTy(3) || !val->getType()->isIntegerTy(2))
-	{
-		throw GenericError("Bad operands of storeX87TagReg().");
-	}
-
-	std::vector<llvm::Value*> ps = {rNum, val};
-	return irb.CreateCall(getX87TagStoreFunction(), ps);
-}
-
-llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::clearX87TagReg(
-		llvm::IRBuilder<>& irb,
-		llvm::Value* rNum)
-{
-	return storeX87TagReg(
-			irb,
-			rNum,
-			llvm::ConstantInt::get(irb.getIntNTy(2), -1, true)); // 11 - empty
 }
 
 llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::loadX87DataReg(
@@ -1060,19 +947,6 @@ llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::loadX87DataReg(
 
 	std::vector<llvm::Value*> ps = {rNum};
 	return irb.CreateCall(getX87DataLoadFunction(), ps);
-}
-
-llvm::CallInst* Capstone2LlvmIrTranslatorX86_impl::loadX87TagReg(
-		llvm::IRBuilder<>& irb,
-		llvm::Value* rNum)
-{
-	if (!rNum->getType()->isIntegerTy(3))
-	{
-		throw GenericError("Bad operands of loadX87TagReg().");
-	}
-
-	std::vector<llvm::Value*> ps = {rNum};
-	return irb.CreateCall(getX87TagLoadFunction(), ps);
 }
 
 llvm::Value* Capstone2LlvmIrTranslatorX86_impl::loadOp(
@@ -2761,7 +2635,7 @@ void Capstone2LlvmIrTranslatorX86_impl::translateNeg(cs_insn* i, cs_x86* xi, llv
  * SMSW, CLTS, INVD, LOCK, RSM, RDMSR, WRMSR, RDPMC, SYSENTER,
  * SYSEXIT, XGETBV, LAR, LSL, INVPCID, SLDT, LLDT, SGDT, SIDT, LGDT, LIDT,
  * XSAVE, XRSTOR, XSAVEOPT, INVLPG, FLDENV, ARPL,
- * STR, FXTRACT,
+ * STR,
  * FWAIT, FNOP
  */
 void Capstone2LlvmIrTranslatorX86_impl::translateNop(cs_insn* i, cs_x86* xi, llvm::IRBuilder<>& irb)
@@ -2814,14 +2688,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFninit(cs_insn* i, cs_x86* xi, 
 	storeRegister(X87_REG_TOP, zero, irb);
 	storeRegister(X87_REG_B, zero, irb);
 	// FPUTagWord = 0xFFFF;
-	storeRegister(X87_REG_TAG0, i2Set, irb);
-	storeRegister(X87_REG_TAG1, i2Set, irb);
-	storeRegister(X87_REG_TAG2, i2Set, irb);
-	storeRegister(X87_REG_TAG3, i2Set, irb);
-	storeRegister(X87_REG_TAG4, i2Set, irb);
-	storeRegister(X87_REG_TAG5, i2Set, irb);
-	storeRegister(X87_REG_TAG6, i2Set, irb);
-	storeRegister(X87_REG_TAG7, i2Set, irb);
 	// FPUDataPointer = 0;
 	// FPUInstructionPointer = 0;
 	// FPULastInstructionOpcode = 0;
@@ -4399,7 +4265,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFbstp(cs_insn* i, cs_x86* xi, l
 	auto* c = irb.CreateCall(fnc, llvm::ArrayRef<llvm::Value*>{op0});
 
 	storeOp(xi->operands[0], c, irb);
-	clearX87TagReg(irb, top);
 	x87IncTop(irb, top); //pop
 }
 
@@ -4499,7 +4364,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFst(cs_insn* i, cs_x86* xi, llv
 
 	if (i->id == X86_INS_FSTP)
 	{
-		storeX87TagReg(irb, top, llvm::ConstantInt::get(irb.getIntNTy(2), 3)); // 0b11
 		x87IncTop(irb, top);
 	}
 }
@@ -4526,7 +4390,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFmul(cs_insn* i, cs_x86* xi, ll
 
 	if (i->id == X86_INS_FMULP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4553,7 +4416,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFadd(cs_insn* i, cs_x86* xi, ll
 
 	if (i->id == X86_INS_FADDP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4580,7 +4442,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFdiv(cs_insn* i, cs_x86* xi, ll
 
 	if (i->id == X86_INS_FDIVP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4607,7 +4468,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFdivr(cs_insn* i, cs_x86* xi, l
 
 	if (i->id == X86_INS_FDIVRP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4648,7 +4508,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFsub(cs_insn* i, cs_x86* xi, ll
 
 	if (i->id == X86_INS_FSUBP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4675,7 +4534,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFsubr(cs_insn* i, cs_x86* xi, l
 
 	if (i->id == X86_INS_FSUBRP)
 	{
-		clearX87TagReg(irb, top); // pop
 		x87IncTop(irb, top);
 	}
 }
@@ -4778,7 +4636,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFyl2x(cs_insn* i, cs_x86* xi, l
 	auto* fmulLog2 = irb.CreateFMul(op1, log2);
 
 	storeX87DataReg(irb, idx, fmulLog2);
-	clearX87TagReg(irb, top); // pop
 	x87IncTop(irb, top);
 }
 
@@ -4916,17 +4773,14 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFatan(cs_insn* i, cs_x86* xi, l
 
 	std::tie(op0, op1, top, idx) = loadOpFloatingBinaryTop(i, xi, irb);
 
-	auto div = irb.CreateFDiv(op1, op0);
-
 	llvm::Function* fnc = getPseudoAsmFunction(
 			i,
-			div->getType(),
-			llvm::ArrayRef<llvm::Type*>{div->getType()});
-	auto* atan = irb.CreateCall(fnc, llvm::ArrayRef<llvm::Value*>{div});
+			op0->getType(),
+			llvm::ArrayRef<llvm::Type*>{op1->getType(), op0->getType()});
+	auto* atan = irb.CreateCall(fnc, llvm::ArrayRef<llvm::Value*>{op1, op0});
 
 	storeX87DataReg(irb, idx, atan);
 
-	clearX87TagReg(irb, top); // pop
 	x87IncTop(irb, top);
 }
 
@@ -4963,17 +4817,7 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFdecstp(cs_insn* i, cs_x86* xi,
  */
 void Capstone2LlvmIrTranslatorX86_impl::translateFfree(cs_insn* i, cs_x86* xi, llvm::IRBuilder<>& irb)
 {
-	EXPECT_IS_UNARY(i, xi, irb);
-
-	top = loadX87Top(irb);
-	auto reg = xi->operands[0].reg;
-	unsigned regOff = reg - X86_REG_ST0;
-	idx = regOff
-		  ? irb.CreateAdd(top, llvm::ConstantInt::get(top->getType(), regOff))
-		  : top;
-
-	//storeX87TagReg(irb, idx, llvm::ConstantInt::get(irb.getIntNTy(2), 0x11B)); // 0x11B
-	clearX87TagReg(irb, idx);
+	// ignore
 }
 
 /**
@@ -5279,11 +5123,9 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFucomPop(cs_insn* i, cs_x86* xi
 
 	if (pop)
 	{
-		clearX87TagReg(irb, top); // pop
 		auto* top1 = x87IncTop(irb, top);
 		if (doublePop)
 		{
-			clearX87TagReg(irb, top1); // pop
 			x87IncTop(irb, top1);
 		}
 	}
@@ -5317,18 +5159,20 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFxtract(cs_insn* i, cs_x86* xi,
 
 	// call of pseudo function witch parse mantissa and exponent from st(0) because llvm can not
 	// simply represent this operation by native
-	auto* pseudoGetSignificand = llvm::Function::Create(
-			llvm::FunctionType::get(op0->getType(), llvm::ArrayRef<llvm::Type*>{op0->getType()}, false),
-			llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-			"__pseudo_get_significand",
-			_module);
+	llvm::Function* pseudoGetSignificand = getPseudoAsmFunction(
+			i,
+			op0->getType(),
+			llvm::ArrayRef<llvm::Type*>{op0->getType()},
+			"__pseudo_get_significand"
+	);
 	auto* mantissa = irb.CreateCall(pseudoGetSignificand, llvm::ArrayRef<llvm::Value*>{op0});
 
-	auto* pseudoGetExponent = llvm::Function::Create(
-		llvm::FunctionType::get(op0->getType(), llvm::ArrayRef<llvm::Type*>{op0->getType()}, false),
-		llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-		"__pseudo_get_exponent",
-		_module);
+	llvm::Function* pseudoGetExponent = getPseudoAsmFunction(
+			i,
+			op0->getType(),
+			llvm::ArrayRef<llvm::Type*>{op0->getType()},
+			"__pseudo_get_exponent"
+	);
 	auto* exponent = irb.CreateCall(pseudoGetExponent, llvm::ArrayRef<llvm::Value*>{op0});
 
 	storeX87DataReg(irb, top, exponent);
@@ -5352,7 +5196,6 @@ void Capstone2LlvmIrTranslatorX86_impl::translateFist(cs_insn* i, cs_x86* xi, ll
 
 	if (i->id == X86_INS_FISTP or i->id == X86_INS_FISTTP) // pop
 	{
-		clearX87TagReg(irb, topNum); // pop
 		x87IncTop(irb, topNum);
 	}
 }

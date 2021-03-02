@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -26,16 +27,10 @@ RichHeaderJsonGetter::RichHeaderJsonGetter(FileInformation &fileInfo) : Iterativ
 	title = "richHeader";
 	subtitle = "richHeaderRecords";
 	commonHeaderElements.push_back("index");
-	commonHeaderElements.push_back("version");
+	commonHeaderElements.push_back("product_id");
 	commonHeaderElements.push_back("count");
-}
-
-/**
- * Destructor
- */
-RichHeaderJsonGetter::~RichHeaderJsonGetter()
-{
-
+	commonHeaderElements.push_back("product_name");
+	commonHeaderElements.push_back("vs_name");
 }
 
 std::size_t RichHeaderJsonGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
@@ -56,7 +51,7 @@ std::size_t RichHeaderJsonGetter::getBasicInfo(std::size_t structIndex, std::vec
 	info.push_back(fileinfo.getRichHeaderOffsetStr(hexWithPrefix));
 	info.push_back(fileinfo.getRichHeaderKeyStr(hexWithPrefix));
 	info.push_back(toLower(fileinfo.getRichHeaderSignature()));
-	info.push_back(numToStr(fileinfo.getNumberOfStoredRecordsInRichHeader()));
+	info.push_back(std::to_string(fileinfo.getNumberOfStoredRecordsInRichHeader()));
 	info.push_back(replaceNonprintableChars(fileinfo.getRichHeaderRawBytesStr()));
 
 	return info.size();
@@ -70,11 +65,13 @@ bool RichHeaderJsonGetter::getRecord(std::size_t structIndex, std::size_t recInd
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
-	const auto major = fileinfo.getRichHeaderRecordMajorVersionStr(recIndex);
-	const auto build = fileinfo.getRichHeaderRecordBuildVersionStr(recIndex);
-	record.push_back(!major.empty() && !build.empty() ? major + "." + build : "");
+	record.push_back(std::to_string(recIndex));
+	const auto productId = fileinfo.getRichHeaderRecordProductIdStr(recIndex);
+	const auto productBuild = fileinfo.getRichHeaderRecordProductBuildStr(recIndex);
+	record.push_back(!productId.empty() && !productBuild.empty() ? productId + "." + productBuild : "");
 	record.push_back(fileinfo.getRichHeaderRecordNumberOfUsesStr(recIndex));
+	record.push_back(fileinfo.getRichHeaderRecordProductNameStr(recIndex));
+	record.push_back(fileinfo.getRichHeaderRecordVisualStudioNameStr(recIndex));
 
 	return true;
 }
@@ -93,3 +90,4 @@ bool RichHeaderJsonGetter::getFlags(std::size_t structIndex, std::size_t recInde
 }
 
 } // namespace fileinfo
+} // namespace retdec

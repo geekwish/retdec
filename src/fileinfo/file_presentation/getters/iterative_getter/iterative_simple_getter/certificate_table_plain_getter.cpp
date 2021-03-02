@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -40,14 +41,6 @@ CertificateTablePlainGetter::CertificateTablePlainGetter(FileInformation &fileIn
 	commonHeaderElements.push_back("SHA256              : ");
 }
 
-/**
- * Destructor
- */
-CertificateTablePlainGetter::~CertificateTablePlainGetter()
-{
-
-}
-
 std::size_t CertificateTablePlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.hasCertificateTableRecords())
@@ -61,10 +54,10 @@ std::size_t CertificateTablePlainGetter::getBasicInfo(std::size_t structIndex, s
 	desc.push_back("Number of certificates          : ");
 	desc.push_back("Signer certificate index        : ");
 	desc.push_back("Counter-signer certificate index: ");
-	info.push_back(numToStr(fileinfo.getNumberOfStoredCertificates()));
+	info.push_back(std::to_string(fileinfo.getNumberOfStoredCertificates()));
 	if(fileinfo.hasCertificateTableSignerCertificate())
 	{
-		info.push_back(numToStr(fileinfo.getCertificateTableSignerCertificateIndex()));
+		info.push_back(std::to_string(fileinfo.getCertificateTableSignerCertificateIndex()));
 	}
 	else
 	{
@@ -72,7 +65,7 @@ std::size_t CertificateTablePlainGetter::getBasicInfo(std::size_t structIndex, s
 	}
 	if(fileinfo.hasCertificateTableCounterSignerCertificate())
 	{
-		info.push_back(numToStr(fileinfo.getCertificateTableCounterSignerCertificateIndex()));
+		info.push_back(std::to_string(fileinfo.getCertificateTableCounterSignerCertificateIndex()));
 	}
 	else
 	{
@@ -121,3 +114,4 @@ bool CertificateTablePlainGetter::getFlags(std::size_t structIndex, std::size_t 
 }
 
 } // namespace fileinfo
+} // namespace retdec

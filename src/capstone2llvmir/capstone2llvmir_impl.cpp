@@ -6,7 +6,6 @@
  */
 
 #include <iomanip>
-#include <iostream>
 
 #include "capstone2llvmir/capstone2llvmir_impl.h"
 
@@ -166,7 +165,7 @@ typename Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::TranslationResult
 Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::translate(
 		const uint8_t* bytes,
 		std::size_t size,
-		retdec::utils::Address a,
+		retdec::common::Address a,
 		llvm::IRBuilder<>& irb,
 		std::size_t count,
 		bool stopOnBranch)
@@ -234,7 +233,7 @@ typename Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::TranslationResultOne
 Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::translateOne(
 		const uint8_t*& bytes,
 		std::size_t& size,
-		retdec::utils::Address& a,
+		retdec::common::Address& a,
 		llvm::IRBuilder<>& irb)
 {
 	TranslationResultOne res;
@@ -790,7 +789,7 @@ llvm::StoreInst* Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::generateSpecial
 		llvm::IRBuilder<>& irb,
 		cs_insn* i)
 {
-	retdec::utils::Address a = i->address;
+	retdec::common::Address a = i->address;
 	auto* gv = getAsm2LlvmMapGlobalVariable();
 	auto* ci = llvm::ConstantInt::get(gv->getValueType(), a, false);
 	auto* s = irb.CreateStore(ci, gv, true);
@@ -981,7 +980,6 @@ llvm::GlobalVariable* Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::createRegi
 // Load/store methods.
 //==============================================================================
 //
-
 
 template <typename CInsn, typename CInsnOp>
 llvm::Value* Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::loadOp(
@@ -1209,7 +1207,6 @@ Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::loadOpTernary(
 	return std::make_tuple(operands[0], operands[1], operands[2]);
 }
 
-
 /**
  * Throws if op_count != 3.
  */
@@ -1225,7 +1222,6 @@ Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::loadOpTernary(
 	auto operands = _loadOps(ci, irb, 3, true, loadType, dstType, ct);
 	return std::make_tuple(operands[0], operands[1], operands[2]);
 }
-
 
 /**
  * Throws if op_count not in {2, 3}.
@@ -1568,14 +1564,15 @@ llvm::Function* Capstone2LlvmIrTranslator_impl<CInsn, CInsnOp>::getPseudoAsmFunc
 		llvm::FunctionType* type,
 		const std::string& name)
 {
-	auto p = std::make_pair(insn->id, type);
+	auto n = name.empty() ? getPseudoAsmFunctionName(insn) : name;
+	auto p = std::make_pair(n, type);
 	auto fIt = _insn2asmFunctions.find(p);
 	if (fIt == _insn2asmFunctions.end())
 	{
 		auto* fnc = llvm::Function::Create(
 				type,
 				llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-				name.empty() ? getPseudoAsmFunctionName(insn) : name,
+				n,
 				_module);
 		_insn2asmFunctions[p] = fnc;
 		_asmFunctions.insert(fnc);

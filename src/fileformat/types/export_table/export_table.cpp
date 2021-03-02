@@ -4,31 +4,15 @@
  * @copyright (c) 2017 Avast Software, licensed under the MIT license
  */
 
-#include "retdec/crypto/crypto.h"
 #include "retdec/utils/string.h"
 #include "retdec/utils/conversion.h"
 #include "retdec/fileformat/types/export_table/export_table.h"
+#include "retdec/fileformat/utils/crypto.h"
 
 using namespace retdec::utils;
 
 namespace retdec {
 namespace fileformat {
-
-/**
- * Constructor
- */
-ExportTable::ExportTable()
-{
-
-}
-
-/**
- * Destructor
- */
-ExportTable::~ExportTable()
-{
-
-}
 
 /**
  * Get number of stored exports
@@ -179,9 +163,9 @@ void ExportTable::computeHashes()
 		}
 	}
 
-	expHashCrc32 = retdec::crypto::getCrc32(expHashBytes.data(), expHashBytes.size());
-	expHashMd5 = retdec::crypto::getMd5(expHashBytes.data(), expHashBytes.size());
-	expHashSha256 = retdec::crypto::getSha256(expHashBytes.data(), expHashBytes.size());
+	expHashCrc32 = getCrc32(expHashBytes.data(), expHashBytes.size());
+	expHashMd5 = getMd5(expHashBytes.data(), expHashBytes.size());
+	expHashSha256 = getSha256(expHashBytes.data(), expHashBytes.size());
 }
 
 /**
@@ -257,7 +241,10 @@ void ExportTable::dump(std::string &dumpTable) const
 
 		for(const auto &exp : exports)
 		{
-			ret << "; " << std::hex << exp.getName() << " (addr: " << exp.getAddress() << ", ord: " << std::dec << (exp.getOrdinalNumber(aux) ? numToStr(aux, std::dec) : "-") << ")\n";
+			ret << "; " << std::hex << exp.getName() << " (addr: "
+				<< exp.getAddress() << ", ord: " << std::dec
+				<< (exp.getOrdinalNumber(aux) ? std::to_string(aux) : "-")
+				<< ")\n";
 		}
 	}
 

@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <iomanip>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <string>
@@ -36,7 +35,7 @@ namespace bin2llvmir {
 char ConstantsAnalysis::ID = 0;
 
 static RegisterPass<ConstantsAnalysis> X(
-		"constants",
+		"retdec-constants",
 		"Constants optimization",
 		false, // Only looks at CFG
 		false // Analysis Pass
@@ -111,6 +110,8 @@ bool ConstantsAnalysis::run()
 		}
 	}
 
+	IrModifier::eraseUnusedInstructionsRecursive(_toRemove);
+
 	return false;
 }
 
@@ -122,7 +123,7 @@ void ConstantsAnalysis::checkForGlobalInInstruction(
 {
 	LOG << llvmObjToString(inst) << std::endl;
 
-	SymbolicTree root(RDA, val);
+	auto root = SymbolicTree::PrecomputedRda(RDA, val);
 	root.simplifyNode();
 
 	LOG << root << std::endl;
@@ -147,6 +148,7 @@ void ConstantsAnalysis::checkForGlobalInInstruction(
 			if (max == &root)
 			{
 				auto* conv = IrModifier::convertConstantToType(ngv, val->getType());
+				_toRemove.insert(val);
 				inst->replaceUsesOfWith(val, conv);
 				return;
 			}
@@ -163,6 +165,7 @@ void ConstantsAnalysis::checkForGlobalInInstruction(
 	if (isa<LoadInst>(inst) && gv && root.ops.size() <= 1)
 	{
 		auto* conv = IrModifier::convertConstantToType(gv, val->getType());
+		_toRemove.insert(val);
 		inst->replaceUsesOfWith(val, conv);
 		return;
 	}

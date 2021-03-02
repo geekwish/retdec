@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include <tinyxml2.h>
+#include <tinyxml2/tinyxml2.h>
 
 #include "retdec/fileformat/file_format/file_format.h"
 #include "fileinfo/file_detector/file_detector.h"
@@ -16,6 +16,7 @@ using namespace retdec::utils;
 using namespace retdec::cpdetect;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -23,18 +24,19 @@ namespace fileinfo {
  *
  * Constructor in subclass must initialize members @a fileParser and @a loaded.
  */
-FileDetector::FileDetector(const std::string & pathToInputFile, FileInformation &finfo, retdec::cpdetect::DetectParams &searchPar, retdec::fileformat::LoadFlags loadFlags) :
-	fileInfo(finfo), cpParams(searchPar), fileConfig(nullptr), fileParser(nullptr), loadFlags(loadFlags), loaded(false)
+FileDetector::FileDetector(
+		const std::string & pathToInputFile,
+		FileInformation &finfo,
+		retdec::cpdetect::DetectParams &searchPar,
+		retdec::fileformat::LoadFlags loadFlags)
+		: fileInfo(finfo)
+		, cpParams(searchPar)
+		, fileConfig(nullptr)
+		, fileParser(nullptr)
+		, loadFlags(loadFlags)
+		, loaded(false)
 {
 	fileInfo.setPathToFile(pathToInputFile);
-}
-
-/**
- * Destructor
- */
-FileDetector::~FileDetector()
-{
-
 }
 
 /**
@@ -315,8 +317,8 @@ void FileDetector::setConfigFile(retdec::config::Config &config)
 			arch,
 			endian,
 			config.architecture.getByteSize(),
-			config.getEntryPoint(),
-			config.getSectionVMA());
+			config.parameters.getEntryPoint(),
+			config.parameters.getSectionVMA());
 }
 
 /**
@@ -360,3 +362,4 @@ const retdec::fileformat::FileFormat* FileDetector::getFileParser() const
 }
 
 } // namespace fileinfo
+} // namespace retdec

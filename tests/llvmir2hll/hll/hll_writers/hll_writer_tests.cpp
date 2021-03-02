@@ -37,6 +37,8 @@ void HLLWriterTests::SetUp() {
 		.WillByDefault(Return(NO_LINE_RANGE));
 	ON_CALL(*configMock, isUserDefinedFunc(_))
 		.WillByDefault(Return(false));
+	ON_CALL(*configMock, isDecompilerDefinedFunc(_))
+		.WillByDefault(Return(false));
 	ON_CALL(*configMock, isStaticallyLinkedFunc(_))
 		.WillByDefault(Return(false));
 	ON_CALL(*configMock, isDynamicallyLinkedFunc(_))
@@ -63,8 +65,6 @@ void HLLWriterTests::SetUp() {
 		.WillByDefault(Return(StringVector()));
 	ON_CALL(*configMock, getDemangledNameOfClass(_))
 		.WillByDefault(Return(""));
-	ON_CALL(*configMock, getFrontendRelease())
-		.WillByDefault(Return(""));
 	ON_CALL(*configMock, getNumberOfFuncsDetectedInFrontend())
 		.WillByDefault(Return(0));
 	ON_CALL(*configMock, getDetectedCompilerOrPacker())
@@ -72,8 +72,6 @@ void HLLWriterTests::SetUp() {
 	ON_CALL(*configMock, getDetectedLanguage())
 		.WillByDefault(Return(""));
 	ON_CALL(*configMock, getSelectedButNotFoundFuncs())
-		.WillByDefault(Return(StringSet()));
-	ON_CALL(*configMock, getFuncsFixedWithLLVMIRFixer())
 		.WillByDefault(Return(StringSet()));
 
 	ON_CALL(*semanticsMock, getCHeaderFileForFunc(_))

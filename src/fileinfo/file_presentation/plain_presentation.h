@@ -9,6 +9,7 @@
 
 #include "fileinfo/file_presentation/file_presentation.h"
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -36,11 +37,11 @@ class PlainPresentation : public FilePresentation
 		/// @}
 	public:
 		PlainPresentation(FileInformation &fileinfo_, bool verbose_, bool explanatory_);
-		virtual ~PlainPresentation() override;
 
 		virtual bool present() override;
 };
 
 } // namespace fileinfo
+} // namespace retdec
 
 #endif

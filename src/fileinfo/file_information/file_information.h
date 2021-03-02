@@ -12,6 +12,7 @@
 #include "retdec/cpdetect/cpdetect.h"
 #include "fileinfo/file_information/file_information_types/file_information_types.h"
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -23,7 +24,7 @@ namespace fileinfo {
 class FileInformation
 {
 	private:
-		retdec::cpdetect::ReturnCode status;           ///< return code
+		retdec::cpdetect::ReturnCode status = retdec::cpdetect::ReturnCode::OK;
 		std::string filePath;                          ///< path to input file
 		std::string crc32;                             ///< CRC32 of input file
 		std::string md5;                               ///< MD5 of input file
@@ -31,7 +32,8 @@ class FileInformation
 		std::string secCrc32;                          ///< CRC32 of section table
 		std::string secMd5;                            ///< MD5 of section table
 		std::string secSha256;                         ///< SHA256 of section table
-		retdec::fileformat::Format fileFormatEnum;     ///< format of input file in enumeration representation
+		/// format of input file in enumeration representation
+		retdec::fileformat::Format fileFormatEnum = retdec::fileformat::Format::UNKNOWN;
 		std::string fileFormat;                        ///< format of input file in string representation
 		std::string fileClass;                         ///< class of file
 		std::string fileType;                          ///< type of file (e.g. executable file)
@@ -69,9 +71,6 @@ class FileInformation
 	public:
 		retdec::cpdetect::ToolInformation toolInfo; ///< detected tools
 		std::vector<std::string> messages;   ///< error, warning and other messages
-
-		FileInformation();
-		~FileInformation();
 
 		/// @name Getters of own members
 		/// @{
@@ -152,10 +151,11 @@ class FileInformation
 		std::string getRichHeaderSignature() const;
 		std::string getRichHeaderOffsetStr(std::ios_base &(* format)(std::ios_base &)) const;
 		std::string getRichHeaderKeyStr(std::ios_base &(* format)(std::ios_base &)) const;
-		std::string getRichHeaderRecordMajorVersionStr(std::size_t position) const;
-		std::string getRichHeaderRecordMinorVersionStr(std::size_t position) const;
-		std::string getRichHeaderRecordBuildVersionStr(std::size_t position) const;
+		std::string getRichHeaderRecordProductIdStr(std::size_t position) const;
+		std::string getRichHeaderRecordProductBuildStr(std::size_t position) const;
 		std::string getRichHeaderRecordNumberOfUsesStr(std::size_t position) const;
+		std::string getRichHeaderRecordProductNameStr(std::size_t position) const;
+		std::string getRichHeaderRecordVisualStudioNameStr(std::size_t position) const;
 		std::string getRichHeaderRawBytesStr() const;
 		bool hasRichHeaderRecords() const;
 		/// @}
@@ -416,7 +416,7 @@ class FileInformation
 		/// @}
 
 		/// @name Getters of @a relocationTables
-		/// {
+		/// @{
 		std::size_t getNumberOfStoredRelocationsInTable(std::size_t position) const;
 		std::string getNumberOfStoredRelocationsInTableStr(std::size_t position) const;
 		std::string getNumberOfDeclaredRelocationsInTableStr(std::size_t position) const;
@@ -657,5 +657,6 @@ class FileInformation
 };
 
 } // namespace fileinfo
+} // namespace retdec
 
 #endif

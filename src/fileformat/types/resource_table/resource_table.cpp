@@ -5,13 +5,12 @@
  */
 
 #include <sstream>
-#include <iostream>
 
-#include "retdec/crypto/crypto.h"
 #include "retdec/utils/conversion.h"
 #include "retdec/utils/dynamic_buffer.h"
 #include "retdec/utils/string.h"
 #include "retdec/utils/alignment.h"
+#include "retdec/fileformat/utils/crypto.h"
 #include "retdec/fileformat/utils/other.h"
 #include "retdec/fileformat/types/resource_table/resource_table.h"
 #include "retdec/fileformat/types/resource_table/bitmap_image.h"
@@ -72,22 +71,6 @@ namespace retdec {
 namespace fileformat {
 
 /**
- * Constructor
- */
-ResourceTable::ResourceTable()
-{
-
-}
-
-/**
- * Destructor
- */
-ResourceTable::~ResourceTable()
-{
-
-}
-
-/**
  * Compute icon perceptual hashes
  * @param icon Icon to compute the hash of
  * @return Perceptual hash as AvgHash
@@ -126,7 +109,7 @@ std::string ResourceTable::computePerceptualAvgHash(const ResourceIcon &icon) co
 		}
 	}
 
-	return retdec::utils::toHex(bytes, false, 16);
+	return retdec::utils::intToHexString(bytes, false, 16);
 }
 
 /**
@@ -427,9 +410,9 @@ void ResourceTable::computeIconHashes()
 		return;
 	}
 
-	iconHashCrc32 = retdec::crypto::getCrc32(iconHashBytes.data(), iconHashBytes.size());
-	iconHashMd5 = retdec::crypto::getMd5(iconHashBytes.data(), iconHashBytes.size());
-	iconHashSha256 = retdec::crypto::getSha256(iconHashBytes.data(), iconHashBytes.size());
+	iconHashCrc32 = getCrc32(iconHashBytes.data(), iconHashBytes.size());
+	iconHashMd5 = getMd5(iconHashBytes.data(), iconHashBytes.size());
+	iconHashSha256 = getSha256(iconHashBytes.data(), iconHashBytes.size());
 	iconPerceptualAvgHash = computePerceptualAvgHash(*priorIcon);
 }
 
@@ -907,8 +890,8 @@ void ResourceTable::dump(std::string &dumpTable) const
 
 		for(const auto &res : table)
 		{
-			auto sName = (res->hasEmptyName() && res->getNameId(aux)) ? numToStr(aux, std::dec) : res->getName();
-			auto sType = (res->hasEmptyType() && res->getTypeId(aux)) ? numToStr(aux, std::dec) : res->getType();
+			auto sName = (res->hasEmptyName() && res->getNameId(aux)) ? std::to_string(aux) : res->getName();
+			auto sType = (res->hasEmptyType() && res->getTypeId(aux)) ? std::to_string(aux) : res->getType();
 			auto sLang = res->getLanguage();
 			if(sType.empty())
 			{
@@ -918,10 +901,10 @@ void ResourceTable::dump(std::string &dumpTable) const
 			{
 				if(res->getLanguageId(aux))
 				{
-					sLang = numToStr(aux, std::dec);
+					sLang = std::to_string(aux);
 					if(res->getSublanguageId(aux))
 					{
-						sLang += ":" + numToStr(aux, std::dec);
+						sLang += ":" + std::to_string(aux);
 					}
 				}
 				else
@@ -931,8 +914,8 @@ void ResourceTable::dump(std::string &dumpTable) const
 			}
 			const auto md5 = res->hasMd5() ? res->getMd5() : "-";
 			ret << "; " << sName << " (type: " << sType << ", language: " << sLang << ", offset: " <<
-				numToStr(res->getOffset(), std::hex) << ", declSize: " << numToStr(res->getSizeInFile(), std::hex) <<
-				", loadedSize: " << numToStr(res->getLoadedSize(), std::hex) << ", md5: " << md5 << ")\n";
+				intToHexString(res->getOffset()) << ", declSize: " << intToHexString(res->getSizeInFile()) <<
+				", loadedSize: " << intToHexString(res->getLoadedSize()) << ", md5: " << md5 << ")\n";
 		}
 	}
 

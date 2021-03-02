@@ -5,7 +5,6 @@
  */
 
 #include <iomanip>
-#include <iostream>
 
 #include "capstone2llvmir/mips/mips_impl.h"
 
@@ -22,11 +21,6 @@ Capstone2LlvmIrTranslatorMips_impl::Capstone2LlvmIrTranslatorMips_impl(
 	// This needs to be called from concrete's class ctor, not abstract's
 	// class ctor, so that virtual table is properly initialized.
 	initialize();
-}
-
-Capstone2LlvmIrTranslatorMips_impl::~Capstone2LlvmIrTranslatorMips_impl()
-{
-	// Nothing specific to MIPS.
 }
 
 //

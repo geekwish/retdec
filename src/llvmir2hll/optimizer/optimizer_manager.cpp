@@ -4,15 +4,16 @@
 * @copyright (c) 2017 Avast Software, licensed under the MIT license
 */
 
+#include <chrono>
+#include <thread>
+
 #include "retdec/llvmir2hll/analysis/value_analysis.h"
 #include "retdec/llvmir2hll/graphs/cg/cg_builder.h"
-#include "retdec/llvmir2hll/hll/bir_writer.h"
 #include "retdec/llvmir2hll/hll/hll_writer.h"
 #include "retdec/llvmir2hll/obtainer/call_info_obtainer.h"
 #include "retdec/llvmir2hll/optimizer/optimizer_manager.h"
 #include "retdec/llvmir2hll/optimizer/optimizers/aggressive_deref_optimizer.h"
 #include "retdec/llvmir2hll/optimizer/optimizers/aggressive_global_to_local_optimizer.h"
-#include "retdec/llvmir2hll/optimizer/optimizers/auxiliary_variables_optimizer.h"
 #include "retdec/llvmir2hll/optimizer/optimizers/bit_op_to_log_op_optimizer.h"
 #include "retdec/llvmir2hll/optimizer/optimizers/bit_shift_optimizer.h"
 #include "retdec/llvmir2hll/optimizer/optimizers/break_continue_return_optimizer.h"
@@ -49,12 +50,12 @@
 #include "retdec/utils/container.h"
 #include "retdec/utils/string.h"
 #include "retdec/utils/system.h"
+#include "retdec/utils/io/log.h"
 
-using namespace retdec::llvm_support;
+using namespace retdec::utils::io;
 using namespace std::string_literals;
 
 using retdec::utils::hasItem;
-using retdec::utils::sleep;
 using retdec::utils::startsWith;
 
 namespace retdec {
@@ -139,11 +140,6 @@ OptimizerManager::OptimizerManager(const StringSet &enabledOpts,
 		}
 
 /**
-* @brief Destructs the manager.
-*/
-OptimizerManager::~OptimizerManager() {}
-
-/**
 * @brief Runs the optimizations over @a m.
 */
 void OptimizerManager::optimize(ShPtr<Module> m) {
@@ -153,14 +149,6 @@ void OptimizerManager::optimize(ShPtr<Module> m) {
 	//
 	// Of course, if some optimization depend on another one, the order is
 	// clear.
-
-	//
-	// Perform initial, HLL-dependent optimizations.
-	//
-	if (hllWriter->getId() == "py") {
-		// Optimizations for Python'.
-		run<RemoveAllCastsOptimizer>(m);
-	}
 
 	//
 	// Perform HLL-independent optimizations.
@@ -187,8 +175,6 @@ void OptimizerManager::optimize(ShPtr<Module> m) {
 	run<DeadLocalAssignOptimizer>(m, va);
 	run<SimpleCopyPropagationOptimizer>(m, va, cio);
 	run<CopyPropagationOptimizer>(m, va, cio);
-	// AuxiliaryVariablesOptimizer should be run after CopyPropagationOptimizer.
-	run<AuxiliaryVariablesOptimizer>(m, va, cio);
 
 	// SimplifyArithmExprOptimizer should be run before loop optimizations.
 	run<SimplifyArithmExprOptimizer>(m, arithmExprEvaluator);
@@ -276,14 +262,8 @@ void OptimizerManager::optimize(ShPtr<Module> m) {
 	//
 	// Perform final, HLL-dependent optimizations.
 	//
-	if (hllWriter->getId() == "c") {
-		// Optimizations for C.
-		run<CCastOptimizer>(m);
-		run<CArrayArgOptimizer>(m);
-	} else if (hllWriter->getId() == "py") {
-		// Optimizations for Python'.
-		run<NoInitVarDefOptimizer>(m);
-	}
+	run<CCastOptimizer>(m);
+	run<CArrayArgOptimizer>(m);
 }
 
 /**
@@ -330,8 +310,8 @@ void OptimizerManager::runOptimizerProvidedItShouldBeRun(ShPtr<Optimizer> optimi
 		try {
 			optimizer->optimize();
 		} catch (const std::bad_alloc &) {
-			printWarningMessage("out of memory; trying to recover");
-			sleep(1);
+			Log::error() << Log::Warning << "out of memory; trying to recover" << std::endl;
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	} else {
 		// Just run the optimizer and let std::bad_alloc propagate.
@@ -349,7 +329,7 @@ void OptimizerManager::runOptimizerProvidedItShouldBeRun(ShPtr<Optimizer> optimi
 */
 void OptimizerManager::printOptimization(const std::string &optId) const {
 	if (enableDebug) {
-		printSubPhase("running "s + optId + OPT_SUFFIX);
+		Log::phase("running "s + optId + OPT_SUFFIX, Log::SubPhase);
 	}
 }
 

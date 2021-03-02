@@ -4,7 +4,6 @@
 * @copyright (c) 2018 Avast Software, licensed under the MIT license
 */
 
-#include <iostream>
 #include <fstream>
 
 #include "retdec/llvmir2hll/ir/add_op_expr.h"
@@ -80,18 +79,10 @@
 #include "retdec/llvmir2hll/ir/void_type.h"
 #include "retdec/llvmir2hll/ir/while_loop_stmt.h"
 #include "retdec/llvmir2hll/hll/bir_writer.h"
-#include "retdec/utils/filesystem_path.h"
+#include "retdec/utils/filesystem.h"
 
 namespace retdec {
 namespace llvmir2hll {
-
-BIRWriter::BIRWriter() {
-
-}
-
-BIRWriter::~BIRWriter() {
-
-}
 
 void BIRWriter::emit(ShPtr<Module> m, const std::string& fileName) {
 	module = m;
@@ -101,13 +92,13 @@ void BIRWriter::emit(ShPtr<Module> m, const std::string& fileName) {
 	emitGlobals();
 	emitFunctions();
 
-	utils::FilesystemPath dirName(".");
+	fs::path dirName(".");
 	static unsigned cntr = 0;
 	std::string n = fileName.empty()
 			? "dump_" + std::to_string(cntr++) + ".bir"
 			: fileName;
 	dirName.append(n);
-	std::ofstream myfile(dirName.getPath());
+	std::ofstream myfile(dirName.string());
 	myfile << out.str() << std::endl;
 }
 

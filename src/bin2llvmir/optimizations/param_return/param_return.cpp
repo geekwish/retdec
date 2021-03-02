@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <iomanip>
-#include <iostream>
 #include <limits>
 
 #include <llvm/IR/CFG.h>
@@ -39,7 +38,7 @@ namespace bin2llvmir {
 char ParamReturn::ID = 0;
 
 static RegisterPass<ParamReturn> X(
-		"param-return",
+		"retdec-param-return",
 		"Function parameters and returns optimization",
 		false, // Only looks at CFG
 		false // Analysis Pass
@@ -169,18 +168,18 @@ DataFlowEntry ParamReturn::createDataFlowEntry(Value* calledValue) const
 	return dataflow;
 }
 
-config::CallingConventionID ParamReturn::toCallConv(const std::string &cc) const
+common::CallingConventionID ParamReturn::toCallConv(const std::string &cc) const
 {
-	std::map<std::string, config::CallingConventionID> ccMap {
-		{"cdecl", config::CallingConventionID::CC_CDECL},
-		{"pascal", config::CallingConventionID::CC_PASCAL},
-		{"thiscall", config::CallingConventionID::CC_THISCALL},
-		{"stdcall", config::CallingConventionID::CC_STDCALL},
-		{"fastcall", config::CallingConventionID::CC_FASTCALL},
-		{"eabi", config::CallingConventionID::CC_ARM}
+	std::map<std::string, common::CallingConventionID> ccMap {
+		{"cdecl", common::CallingConventionID::CC_CDECL},
+		{"pascal", common::CallingConventionID::CC_PASCAL},
+		{"thiscall", common::CallingConventionID::CC_THISCALL},
+		{"stdcall", common::CallingConventionID::CC_STDCALL},
+		{"fastcall", common::CallingConventionID::CC_FASTCALL},
+		{"eabi", common::CallingConventionID::CC_ARM}
 	};	// TODO add vectorcall and regcall
 
-	return utils::mapGetValueOrDefault(ccMap, cc, config::CallingConventionID::CC_UNKNOWN);
+	return utils::mapGetValueOrDefault(ccMap, cc, common::CallingConventionID::CC_UNKNOWN);
 }
 
 void ParamReturn::collectExtraData(DataFlowEntry* dataflow) const
@@ -191,25 +190,11 @@ void ParamReturn::collectExtraData(DataFlowEntry* dataflow) const
 		return;
 	}
 
-	// Main
-	//
-	if (fnc->getName() == "main")
-	{
-		auto charPointer = PointerType::get(
-			Type::getInt8Ty(_module->getContext()), 0);
-
-		dataflow->setArgTypes(
-		{
-			_abi->getDefaultType(),
-			PointerType::get(charPointer, 0)
-		},
-		{
-			"argc",
-			"argv"
-		});
-
-		dataflow->setRetType(_abi->getDefaultType());
-		return;
+	auto& config = _config->getConfig();
+	if (config.parameters.isSelectedDecodeOnly()) {
+		auto rdFnc = _config->getFunctionAddress(fnc);
+		auto isDecoded = config.parameters.selectedRanges.contains(rdFnc);
+		dataflow->setIsFullyDecoded(isDecoded);
 	}
 
 	// LTI info.
@@ -286,27 +271,29 @@ void ParamReturn::collectExtraData(DataFlowEntry* dataflow) const
 		{
 			dataflow->setVariadic();
 		}
-		dataflow->setRetType(
+		if (dbgFnc->returnType.isDefined())
+		{
+			dataflow->setRetType(
 			llvm_utils::stringToLlvmTypeDefault(
 				_module,
 				dbgFnc->returnType.getLlvmIr()));
+		}
+		dataflow->setCallingConvention(dbgFnc->callingConvention.getID());
 
 		// TODO: Maybe use demangled function name?
 		// Would it be useful for names from debug info?
-
 		return;
 	}
 
 	auto configFnc = _config->getConfigFunction(fnc);
-	if (_config->getConfig().isIda() && configFnc)
+	if (configFnc && configFnc->isUserDefined())
 	{
 		std::vector<Type*> argTypes;
 		std::vector<std::string> argNames;
 		for (auto& a : configFnc->parameters)
 		{
 			auto* t = llvm_utils::stringToLlvmTypeDefault(
-					_module,
-					a.type.getLlvmIr());
+					_module, a.type.getLlvmIr());
 			if (!t->isSized())
 			{
 				continue;
@@ -314,7 +301,10 @@ void ParamReturn::collectExtraData(DataFlowEntry* dataflow) const
 			argTypes.push_back(t);
 			argNames.push_back(a.getName());
 		}
-		dataflow->setArgTypes(
+		// If no parameters are found do not call setArgType method
+		// as it will consider function to be without paprameters.
+		if (configFnc->parameters.size())
+			dataflow->setArgTypes(
 				std::move(argTypes),
 				std::move(argNames));
 
@@ -322,21 +312,61 @@ void ParamReturn::collectExtraData(DataFlowEntry* dataflow) const
 		{
 			dataflow->setVariadic();
 		}
-		dataflow->setRetType(
-			llvm_utils::stringToLlvmTypeDefault(
-				_module,
-				configFnc->returnType.getLlvmIr()));
+		if (configFnc->returnType.isDefined())
+		{
+			dataflow->setRetType(
+				llvm_utils::stringToLlvmTypeDefault(
+					_module,
+					configFnc->returnType.getLlvmIr()));
+		}
+		dataflow->setCallingConvention(configFnc->callingConvention.getID());
 
 		// TODO: Maybe use demangled function name?
-		// Is it desired for names from IDA?
+		// Would it be useful for names from debug info?
+	}
+	else if (configFnc && configFnc->isDecompilerDefined())
+	{
+		// As decompiler is not good source of information,
+		// we should use only names and other parameters that
+		// we cannot guess by any heuristic.
+		std::vector<Type*> argTypes;
+		std::vector<std::string> argNames;
+		for (auto& a : configFnc->parameters)
+		{
+			argTypes.push_back(_abi->getDefaultType());
+			argNames.push_back(a.getName());
+		}
+		if (configFnc->parameters.size())
+			dataflow->setArgTypes(
+				std::move(argTypes),
+				std::move(argNames));
 
-		return;
+		if (configFnc->isVariadic())
+		{
+			dataflow->setVariadic();
+		}
+		dataflow->setCallingConvention(configFnc->callingConvention.getID());
 	}
 
-	// Calling convention.
-	if (configFnc)
+	// Main
+	//
+	if (!dataflow->argNames().size() && fnc->getName().str() == "main")
 	{
-		dataflow->setCallingConvention(configFnc->callingConvention.getID());
+		auto charPointer = PointerType::get(
+			Type::getInt8Ty(_module->getContext()), 0);
+
+		dataflow->setArgTypes(
+		{
+			_abi->getDefaultType(),
+			PointerType::get(charPointer, 0)
+		},
+		{
+			"argc",
+			"argv"
+		});
+
+		dataflow->setRetType(_abi->getDefaultType());
+		return;
 	}
 
 	// Wrappers.
@@ -556,6 +586,9 @@ void ParamReturn::dumpInfo(const DataFlowEntry& de) const
 	LOG << "\t>|config f : " << (configFnc != nullptr) << std::endl;
 	LOG << "\t>|debug f  : " << (dbgFnc != nullptr) << std::endl;
 	LOG << "\t>|wrapp c  : " << llvmObjToString(wrappedCall) << std::endl;
+	LOG << "\t>|calls cnt: " << de.numberOfCalls() << std::endl;
+	LOG << "\t>|sto stack: " << de.storesOnRawStack(*_abi) << std::endl;
+	LOG << "\t>|is decode: " << de.isFullyDecoded() << std::endl;
 	LOG << "\t>|type set : " << !de.argTypes().empty() << std::endl;
 	LOG << "\t>|ret type : " << llvmObjToString(de.getRetType()) << std::endl;
 	LOG << "\t>|ret value: " << llvmObjToString(de.getRetValue()) << std::endl;
@@ -960,6 +993,11 @@ void ParamReturn::applyToIr(DataFlowEntry& de)
 			definitionArgs.push_back(a);
 		}
 	}
+	std::vector<llvm::Type*> definitionArgTypes;
+	for (auto& t : de.argTypes())
+	{
+		definitionArgTypes.push_back(t != nullptr ? t : _abi->getDefaultType());
+	}
 
 	// Set used calling convention to config
 	auto* cf = _config->getConfigFunction(fnc);
@@ -972,7 +1010,7 @@ void ParamReturn::applyToIr(DataFlowEntry& de)
 	auto* newFnc = irm.modifyFunction(
 			fnc,
 			de.getRetType(),
-			de.argTypes(),
+			definitionArgTypes,
 			de.isVariadic(),
 			rets2vals,
 			loadsOfCalls,
@@ -1021,8 +1059,32 @@ void ParamReturn::connectWrappers(const DataFlowEntry& de)
 	unsigned i = 0;
 	for (auto& a : fnc->args())
 	{
-		auto* conv = IrModifier::convertValueToType(&a, wrappedCall->getArgOperand(i)->getType(), wrappedCall);
-		wrappedCall->setArgOperand(i++, conv);
+		auto iarg = wrappedCall->getArgOperand(i);
+		bool shouldSkip = false;
+		if (auto* load = dyn_cast<LoadInst>(llvm_utils::skipCasts(iarg))) {
+			auto oldarg = load->getPointerOperand();
+
+			std::vector<StoreInst*> users;
+			for (const auto& U : oldarg->users())
+			{
+				if (auto* store = dyn_cast<StoreInst>(U)) {
+					if (store->getFunction() == fnc)
+						users.push_back(store);
+				}
+			}
+			for (auto store: users) {
+				if (llvm_utils::skipCasts(store->getValueOperand()) == &a)
+					continue;
+
+				shouldSkip = true;
+			}
+		}
+
+		if (!shouldSkip) {
+			auto* conv = IrModifier::convertValueToType(&a, wrappedCall->getArgOperand(i)->getType(), wrappedCall);
+			wrappedCall->setArgOperand(i, conv);
+		}
+		i++;
 	}
 
 	//
@@ -1105,7 +1167,8 @@ std::map<CallInst*, std::vector<Value*>> ParamReturn::fetchLoadsOfCalls(
 
 			if (tIt != types.end())
 			{
-				l = IrModifier::convertValueToType(l, *tIt, call);
+				auto t = *tIt != nullptr ? *tIt : _abi->getDefaultType();
+				l = IrModifier::convertValueToType(l, t, call);
 				tIt++;
 			}
 			else

@@ -7,6 +7,7 @@
 #include "retdec/bin2llvmir/providers/names.h"
 #include "retdec/utils/string.h"
 
+using namespace retdec::common;
 using namespace retdec::utils;
 
 namespace retdec {
@@ -20,19 +21,19 @@ namespace bin2llvmir {
 
 namespace names {
 
-std::string generateFunctionName(utils::Address a, bool ida)
+std::string generateFunctionName(common::Address a, bool ida)
 {
 	return ida
 			? generatedFunctionPrefixIDA + a.toHexString()
 			: generatedFunctionPrefix + a.toHexString();
 }
 
-std::string generateFunctionNameUnknown(utils::Address a, bool)
+std::string generateFunctionNameUnknown(common::Address a, bool)
 {
 	return generatedFunctionPrefixUnk + a.toHexString();
 }
 
-std::string generateGlobalVarName(utils::Address a, const std::string& name)
+std::string generateGlobalVarName(common::Address a, const std::string& name)
 {
 	return (name.empty() ? generatedGlobalVarPrefix : (name + "_"))
 			+ a.toHexString();
@@ -44,12 +45,12 @@ std::string generateStackVarName(int offset, const std::string& name)
 			+ std::to_string(offset);
 }
 
-std::string generateBasicBlockName(utils::Address a)
+std::string generateBasicBlockName(common::Address a)
 {
 	return generatedBasicBlockPrefix + a.toHexString();
 }
 
-std::string generateTempVariableName(utils::Address a, unsigned cntr)
+std::string generateTempVariableName(common::Address a, unsigned cntr)
 {
 	return generatedTempVarPrefix + std::to_string(cntr) + "_" + a.toHexString();
 }
@@ -59,7 +60,7 @@ std::string generateFunctionNameUndef(unsigned cntr)
 	return generatedUndefFunctionPrefix + std::to_string(cntr);
 }
 
-std::string generateVtableName(utils::Address a)
+std::string generateVtableName(common::Address a)
 {
 	return generatedVtablePrefix + a.toHexString();
 }
@@ -88,7 +89,10 @@ Name::Name(Config* c, const std::string& name, eType type, Lti* lti) :
 
 	fixPostfix();
 
-	_inLti = lti->getLtiFunction(_name) != nullptr;
+	if (lti && _type > eType::LTI_FUNCTION && lti->getLtiFunction(_name))
+	{
+		_type = eType::LTI_FUNCTION;
+	}
 }
 
 Name::operator std::string() const
@@ -105,33 +109,17 @@ bool Name::operator<(const Name& o) const
 {
 	if (_type == o._type)
 	{
-		// Can this even happen? Maybe it should not.
-		//
-		if (_name.empty())
-		{
-			return false;
-		}
-		else if (o._name.empty())
-		{
-			return true;
-		}
-		else if (_inLti)
-		{
-			return true;
-		}
-		else if (o._inLti)
-		{
-			return false;
-		}
 		// E.g. real case symbol table:
 		// 0x407748 @ .text
 		// 0x407748 @ _printf
 		//
-		else if (_name.front() == '.')
+		if (!_name.empty() && _name.front() == '.'
+				&& !o._name.empty() && o._name.front() != '.')
 		{
 			return false;
 		}
-		else if (o._name.front() == '.')
+		else if (!_name.empty() && _name.front() != '.'
+				&& !o._name.empty() && o._name.front() == '.')
 		{
 			return true;
 		}
@@ -296,7 +284,7 @@ NameContainer::NameContainer(
  * \return \c True if name added, \c false otherwise.
  */
 bool NameContainer::addNameForAddress(
-		retdec::utils::Address a,
+		retdec::common::Address a,
 		const std::string& name,
 		Name::eType type,
 		Lti* lti)
@@ -310,12 +298,12 @@ bool NameContainer::addNameForAddress(
 	return ns.addName(_config, name, type, lti ? lti : _lti);
 }
 
-const Names& NameContainer::getNamesForAddress(retdec::utils::Address a)
+const Names& NameContainer::getNamesForAddress(retdec::common::Address a)
 {
 	return _data[a];
 }
 
-const Name& NameContainer::getPreferredNameForAddress(retdec::utils::Address a)
+const Name& NameContainer::getPreferredNameForAddress(retdec::common::Address a)
 {
 	return _data[a].getPreferredName();
 }
@@ -323,32 +311,24 @@ const Name& NameContainer::getPreferredNameForAddress(retdec::utils::Address a)
 void NameContainer::initFromConfig()
 {
 	addNameForAddress(
-			_config->getConfig().getEntryPoint(),
+			_config->getConfig().parameters.getEntryPoint(),
 			names::entryPointName,
 			Name::eType::ENTRY_POINT);
 
-	for (auto& p : _config->getConfig().functions)
+	for (auto& f : _config->getConfig().functions)
 	{
 		addNameForAddress(
-				p.second.getStart(),
-				p.second.getName(),
+				f.getStart(),
+				f.getName(),
 				Name::eType::CONFIG_FUNCTION);
 	}
 
-	for (auto& p : _config->getConfig().globals)
+	for (auto& g : _config->getConfig().globals)
 	{
 		addNameForAddress(
-				p.second.getStorage().getAddress(),
-				p.second.getName(),
+				g.getStorage().getAddress(),
+				g.getName(),
 				Name::eType::CONFIG_GLOBAL);
-	}
-
-	for (auto& s : _config->getConfig().segments)
-	{
-		addNameForAddress(
-				s.getStart(),
-				s.getName(),
-				Name::eType::CONFIG_SEGMENT);
 	}
 }
 
@@ -367,14 +347,14 @@ void NameContainer::initFromDebug()
 				Name::eType::DEBUG_FUNCTION);
 	}
 
-	for (const auto& p : _debug->globals)
+	for (const auto& g : _debug->globals)
 	{
 		Address addr;
-		if (p.second.getStorage().isMemory(addr))
+		if (g.getStorage().isMemory(addr))
 		{
 			addNameForAddress(
 					addr,
-					p.second.getName(),
+					g.getName(),
 					Name::eType::DEBUG_GLOBAL);
 		}
 	}
@@ -523,8 +503,13 @@ std::string NameContainer::getNameFromImportLibAndOrd(
 
 bool NameContainer::loadImportOrds(const std::string& libName)
 {
+	std::string arch;
+	if (_config->getConfig().architecture.isArm()) arch = "arm";
+	else if (_config->getConfig().architecture.isX86()) arch = "x86";
+	else return false;
+
 	auto dir = _config->getConfig().parameters.getOrdinalNumbersDirectory();
-	auto filePath = dir + "/" + libName + ".ord";
+	auto filePath = dir + "/" + arch + "/" + libName + ".ord";
 
 	std::ifstream inputFile;
 	inputFile.open(filePath);

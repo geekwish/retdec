@@ -13,6 +13,7 @@
 
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -27,14 +28,6 @@ MissingDepsJsonGetter::MissingDepsJsonGetter(FileInformation &fileInfo) : Iterat
 	title = "items";
 	commonHeaderElements.push_back("index");
 	commonHeaderElements.push_back("name");
-}
-
-/**
- * Destructor
- */
-MissingDepsJsonGetter::~MissingDepsJsonGetter()
-{
-
 }
 
 std::size_t MissingDepsJsonGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
@@ -58,7 +51,7 @@ bool MissingDepsJsonGetter::getRecord(std::size_t structIndex, std::size_t recIn
 	}
 
 	record.clear();
-	record.push_back(retdec::utils::numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(retdec::utils::replaceNonprintableChars(fileinfo.getMissingDepName(recIndex)));
 	return true;
 }
@@ -77,3 +70,4 @@ bool MissingDepsJsonGetter::getFlags(std::size_t structIndex, std::size_t recInd
 }
 
 } // namespace fileinfo
+} // namespace retdec

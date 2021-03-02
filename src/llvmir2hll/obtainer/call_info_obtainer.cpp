@@ -14,11 +14,10 @@
 #include "retdec/llvmir2hll/ir/variable.h"
 #include "retdec/llvmir2hll/obtainer/call_info_obtainer.h"
 #include "retdec/llvmir2hll/support/debug.h"
-#include "retdec/llvm-support/diagnostics.h"
 #include "retdec/utils/container.h"
+#include "retdec/utils/io/log.h"
 
-using namespace retdec::llvm_support;
-
+using namespace retdec::utils::io;
 using retdec::utils::hasItem;
 using retdec::utils::setDifference;
 using retdec::utils::setUnion;
@@ -31,13 +30,6 @@ namespace llvmir2hll {
 */
 CallInfo::CallInfo(ShPtr<CallExpr> call):
 	call(call) {}
-
-/**
-* @brief Destructs the piece of information.
-*
-* A default implementation is provided.
-*/
-CallInfo::~CallInfo() {}
 
 /**
 * @brief Returns the function call for which the piece of information has been
@@ -54,13 +46,6 @@ FuncInfo::FuncInfo(ShPtr<Function> func):
 	func(func) {}
 
 /**
-* @brief Destructs the piece of information.
-*
-* A default implementation is provided.
-*/
-FuncInfo::~FuncInfo() {}
-
-/**
 * @brief Returns the function for which the piece of information has been
 *        computed.
 */
@@ -74,11 +59,6 @@ ShPtr<Function> FuncInfo::getFunc() const {
 CallInfoObtainer::CallInfoObtainer():
 	module(), cg(), va(), funcCFGMap(),
 	cfgBuilder(NonRecursiveCFGBuilder::create()) {}
-
-/**
-* @brief Destructs the obtainer.
-*/
-CallInfoObtainer::~CallInfoObtainer() {}
 
 /**
 * @brief Returns the call graph with which the obtainer has been initialized.
@@ -275,7 +255,7 @@ CallInfoObtainer::SCCWithRepresent CallInfoObtainer::findNextSCC(
 	}
 
 	// TODO Can this happen?
-	printWarningMessage("[SCCComputer] No viable SCC has been found.");
+	Log::error() << Log::Warning << "[SCCComputer] No viable SCC has been found." << std::endl;
 	FuncSet scc;
 	ShPtr<Function> func(*(remainingFuncs.begin()));
 	scc.insert(func);
@@ -333,11 +313,6 @@ CallInfoObtainer::SCCComputer::SCCComputer(ShPtr<CG> cg): cg(cg), index(0) {
 		calledFuncInfoMap[i->second] = CalledFuncInfo();
 	}
 }
-
-/**
-* @brief Destructs the computer.
-*/
-CallInfoObtainer::SCCComputer::~SCCComputer() {}
 
 /**
 * @brief Computes and returns all strongly connected components (SCCs) in the

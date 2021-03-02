@@ -1,4 +1,5 @@
-set(RETDEC_TESTS_LLVMIR2HLL_SOURCES
+
+add_executable(tests-llvmir2hll
 	analysis/alias_analysis/alias_analyses/simple_alias_analysis_tests.cpp
 	analysis/break_in_if_analysis_tests.cpp
 	analysis/goto_target_analysis_tests.cpp
@@ -15,14 +16,14 @@ set(RETDEC_TESTS_LLVMIR2HLL_SOURCES
 	graphs/cfg/cfg_traversals/lhs_rhs_uses_cfg_traversal_tests.cpp
 	hll/bracket_managers/c_bracket_manager_tests.cpp
 	hll/bracket_managers/no_bracket_manager_tests.cpp
-	hll/bracket_managers/py_bracket_manager_tests.cpp
 	hll/compound_op_managers/c_compound_op_manager_tests.cpp
 	hll/compound_op_managers/compound_op_manager_tests.cpp
 	hll/compound_op_managers/no_compound_op_manager_tests.cpp
-	hll/compound_op_managers/py_compound_op_manager_tests.cpp
 	hll/hll_writers/c_hll_writer_tests.cpp
 	hll/hll_writers/hll_writer_tests.cpp
-	hll/hll_writers/py_hll_writer_tests.cpp
+	hll/output_managers/json_manager_tests.cpp
+	hll/output_managers/output_manager_tests.cpp
+	hll/output_managers/plain_manager_tests.cpp
 	ir/array_index_op_expr_tests.cpp
 	ir/array_type_tests.cpp
 	ir/assign_stmt_tests.cpp
@@ -71,7 +72,6 @@ set(RETDEC_TESTS_LLVMIR2HLL_SOURCES
 	llvm/llvmir2bir_converter_tests/functions_tests.cpp
 	llvm/llvmir2bir_converter_tests/glob_vars_tests.cpp
 	llvm/string_conversions_tests.cpp
-	optimizer/optimizers/auxiliary_variables_optimizer_tests.cpp
 	optimizer/optimizers/bit_op_to_log_op_optimizer_tests.cpp
 	optimizer/optimizers/bit_shift_optimizer_tests.cpp
 	optimizer/optimizers/break_continue_return_optimizer_tests.cpp
@@ -129,7 +129,6 @@ set(RETDEC_TESTS_LLVMIR2HLL_SOURCES
 	semantics/semantics/libc_semantics_tests.cpp
 	semantics/semantics/win_api_semantics_tests.cpp
 	support/const_symbol_converter_tests.cpp
-	support/funcs_with_prefix_remover_tests.cpp
 	support/global_vars_sorter_tests.cpp
 	support/headers_for_declared_funcs_tests.cpp
 	support/library_funcs_remover_tests.cpp
@@ -148,7 +147,22 @@ set(RETDEC_TESTS_LLVMIR2HLL_SOURCES
 	var_renamer/var_renamers/unified_var_renamer_tests.cpp
 )
 
-add_executable(retdec-tests-llvmir2hll ${RETDEC_TESTS_LLVMIR2HLL_SOURCES})
-target_link_libraries(retdec-tests-llvmir2hll retdec-llvmir2hll retdec-utils gmock_main)
-target_include_directories(retdec-tests-llvmir2hll PUBLIC ${PROJECT_SOURCE_DIR}/tests/)
-install(TARGETS retdec-tests-llvmir2hll RUNTIME DESTINATION ${RETDEC_TESTS_DIR})
+target_include_directories(tests-llvmir2hll
+	PRIVATE
+		${RETDEC_TESTS_DIR}
+)
+
+target_link_libraries(tests-llvmir2hll
+	retdec::llvmir2hll
+	retdec::utils
+	retdec::deps::gmock_main
+)
+
+set_target_properties(tests-llvmir2hll
+	PROPERTIES
+		OUTPUT_NAME "retdec-tests-llvmir2hll"
+)
+
+install(TARGETS tests-llvmir2hll
+	RUNTIME DESTINATION ${RETDEC_INSTALL_TESTS_DIR}
+)

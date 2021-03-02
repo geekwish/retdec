@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -39,14 +40,6 @@ ImportTablePlainGetter::ImportTablePlainGetter(FileInformation &fileInfo) : Iter
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-ImportTablePlainGetter::~ImportTablePlainGetter()
-{
-
-}
-
 std::size_t ImportTablePlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.hasImportTableRecords())
@@ -61,7 +54,7 @@ std::size_t ImportTablePlainGetter::getBasicInfo(std::size_t structIndex, std::v
 	desc.push_back("CRC32            : ");
 	desc.push_back("MD5              : ");
 	desc.push_back("SHA256           : ");
-	info.push_back(numToStr(fileinfo.getNumberOfStoredImports()));
+	info.push_back(std::to_string(fileinfo.getNumberOfStoredImports()));
 	info.push_back(fileinfo.getImphashCrc32());
 	info.push_back(fileinfo.getImphashMd5());
 	info.push_back(fileinfo.getImphashSha256());
@@ -77,7 +70,7 @@ bool ImportTablePlainGetter::loadRecord(std::size_t structIndex, std::size_t rec
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(replaceNonprintableChars(fileinfo.getImportName(recIndex)));
 	record.push_back(replaceNonprintableChars(fileinfo.getImportUsageType(recIndex)));
 	record.push_back(fileinfo.getImportOrdinalNumberStr(recIndex, std::dec));
@@ -104,3 +97,4 @@ bool ImportTablePlainGetter::getFlagDescriptors(std::size_t structIndex, std::ve
 }
 
 } // namespace fileinfo
+} // namespace retdec

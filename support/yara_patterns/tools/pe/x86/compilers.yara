@@ -228,6 +228,46 @@ rule aut2exe_33143 {
 		$1 at pe.entry_point
 }
 
+rule aut2exe_uv_01 {
+	meta:
+		tool = "C"
+		name = "Aut2Exe"
+		language = "AutoIt"
+		bytecode = true
+	strings:
+		$1 = ">AUTOIT SCRIPT<"
+		$2 = ">AUTOIT SCRIPT<" wide
+		$3 = ">AUTOIT UNICODE SCRIPT<" wide
+	condition:
+		pe.is_32bit() and
+		for 1 of them : (
+			@ > pe.sections[pe.section_index(".rdata")].raw_data_offset and
+			@ < pe.sections[pe.section_index(".rdata")].raw_data_offset +
+			pe.sections[pe.section_index(".rdata")].raw_data_size
+		)
+}
+
+rule autohotkey_uv_01 {
+	meta:
+		tool = "C"
+		name = "AHK2Exe"
+		language = "AutoHotKey"
+		bytecode = true
+	strings:
+		$1 = ">AUTOHOTKEY SCRIPT<"
+		$2 = ">AUTOHOTKEY SCRIPT<" wide
+	condition:
+		pe.is_32bit() and
+		for 1 of them : (
+			@ > pe.sections[pe.section_index(".rdata")].raw_data_offset and
+			@ < pe.sections[pe.section_index(".rdata")].raw_data_offset +
+			pe.sections[pe.section_index(".rdata")].raw_data_size
+		) or
+		for 1 i in (0 .. pe.number_of_resources) : (
+			pe.resources[i].name_string matches />AUTOHOTKEY SCRIPT</
+		)
+}
+
 rule borland_c {
 	meta:
 		tool = "C"
@@ -3341,6 +3381,43 @@ rule ocbat2exe {
 		$1 = { 55 8B EC B9 08 00 00 00 6A 00 6A 00 49 75 F9 53 56 57 B8 58 3C 40 00 E8 6C FA FF FF 33 C0 55 68 8A 3F 40 00 64 FF 30 64 89 20 6A 00 6A 00 6A 03 6A 00 6A 01 68 00 00 00 80 8D 55 EC 33 C0 E8 81 E9 FF FF 8B 45 EC E8 41 F6 FF FF 50 E8 F3 FA FF FF 8B F8 83 FF FF 0F 84 83 02 00 00 6A 02 6A 00 6A EE 57 E8 FC FA FF FF 6A 00 68 60 99 4F 00 6A 12 68 18 57 40 00 57 E8 E0 FA FF FF 83 3D 60 99 4F 00 12 0F 85 56 02 00 00 8D 45 E4 50 8D 45 E0 BA 18 57 40 00 B9 40 42 0F 00 E8 61 F4 FF FF 8B 45 E0 B9 12 00 00 00 BA 01 00 00 00 E8 3B F6 FF FF 8B 45 E4 8D 55 E8 E8 04 FB ?? ?? ?? ?? E8 B8 58 99 4F 00 E8 67 F3 FF FF 33 C0 A3 60 99 4F 00 8D 45 DC 50 B9 05 00 00 00 BA 01 00 00 00 A1 58 99 4F 00 E8 04 F6 FF FF 8B 45 DC BA A4 3F 40 00 E8 E3 F4 FF FF }
 	condition:
 		for any of them : ( $ at pe.entry_point )
+}
+
+rule f2ko_bat2exe_uv_01 {
+	meta:
+		tool = "C"
+		name = "F2KO Bat2Exe"
+		pattern = "68????0000680000000068????????E8????????83C40C6800000000E8????????A3????????680000000068001000006800000000E8????????A3"
+	strings:
+		$1 = { 68 ?? ?? 00 00 68 00 00 00 00 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C4 0C 68 00 00 00 00 E8 ?? ?? ?? ?? A3 ?? ?? ?? ?? 68 00 00 00 00 68 00 10 00 00 68 00 00 00 00 E8 ?? ?? ?? ?? A3 }
+	condition:
+		$1 at pe.entry_point
+}
+
+rule adv_bat_to_exe_uv_01 {
+	meta:
+		tool = "C"
+		name = "Advanced BAT to EXE Converter"
+		pattern = "B94FC3000033C08DBD????????F3AB66ABAAA0????????8885????????B96918000033C08DBD????????F3AB66ABAA8A0D????????888D????????B94000000033C08DBD????????F3AB66ABAA8A15????????8895????????B95900000033C08D"
+	strings:
+		$1 = { B9 4F C3 00 00 33 C0 8D BD ?? ?? ?? ?? F3 AB 66 AB AA A0 ?? ?? ?? ?? 88 85 ?? ?? ?? ?? B9 69 18 00 00 33 C0 8D BD ?? ?? ?? ?? F3 AB 66 AB AA 8A 0D ?? ?? ?? ?? 88 8D ?? ?? ?? ?? B9 40 00 00 00 33 C0 8D BD ?? ?? ?? ?? F3 AB 66 AB AA 8A 15 ?? ?? ?? ?? 88 95 ?? ?? ?? ?? B9 59 00 00 00 33 C0 8D }
+	condition:
+		$1
+}
+
+rule exescript_uv_01 {
+	meta:
+		tool = "C"
+		name = "ExeScript"
+		pattern = "558BEC81EC????????566A00FF15????????8985????????C785????????00000000C745????????00FF15????????A3"
+	strings:
+		$1 = { 55 8B EC 81 EC ?? ?? ?? ?? 56 6A 00 FF 15 ?? ?? ?? ?? 89 85 ?? ?? ?? ?? C7 85 ?? ?? ?? ?? 00 00 00 00 C7 45 ?? ?? ?? ?? 00 FF 15 ?? ?? ?? ?? A3 }
+		$2 = "<!-- ----- ExeScript Options Begin -----"
+	condition:
+		$1 at pe.entry_point and
+		@2 > pe.sections[pe.section_index(".rdata")].raw_data_offset and
+		@2 < pe.sections[pe.section_index(".rdata")].raw_data_offset +
+			pe.sections[pe.section_index(".rdata")].raw_data_size
 }
 
 rule plugintoexe_100 {

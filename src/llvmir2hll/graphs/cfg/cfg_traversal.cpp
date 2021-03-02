@@ -47,7 +47,12 @@ private:
 
 private:
 	df_iterator(Node node, typename Graph::stmt_iterator stmtIter) {
-		visitedNodes.insert(node);
+		// If we don't start at the node beginning, we cannot say this node was
+		// visited, because we may need to come back and iterate from its start
+		// to the original starting statement.
+		if (stmtIter == node->stmt_begin()) {
+			visitedNodes.insert(node);
+		}
 		visitStack.emplace(node, stmtIter, node->succ_begin());
 	}
 
@@ -141,11 +146,6 @@ CFGTraversal::CFGTraversal(ShPtr<CFG> cfg, bool defaultCurrRetVal):
 		cfg(cfg), currRetVal(defaultCurrRetVal), stopTraversal(false) {
 	PRECONDITION_NON_NULL(cfg);
 }
-
-/**
-* @brief Destructs the traverser.
-*/
-CFGTraversal::~CFGTraversal() {}
 
 /**
 * @brief Performs a traversal of the current CFG, starting at @a startStmt.

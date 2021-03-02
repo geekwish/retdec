@@ -14,8 +14,8 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
 
-#include "retdec/utils/address.h"
-#include "retdec/utils/filesystem_path.h"
+#include "retdec/common/address.h"
+#include "retdec/utils/filesystem.h"
 
 namespace retdec {
 namespace bin2llvmir {
@@ -24,10 +24,10 @@ class Config
 {
 	public:
 		static Config empty(llvm::Module* m);
-		static Config fromFile(llvm::Module* m, const std::string& path);
-		static Config fromJsonString(llvm::Module* m, const std::string& json);
+		static Config fromConfig(llvm::Module* m, retdec::config::Config& c);
 
 		void doFinalization();
+		void tagFunctionsWithUsedCryptoGlobals();
 
 	public:
 		retdec::config::Config& getConfig();
@@ -35,15 +35,15 @@ class Config
 
 		// Function
 		//
-		retdec::config::Function* getConfigFunction(
+		retdec::common::Function* getConfigFunction(
 				const llvm::Function* fnc);
-		retdec::config::Function* getConfigFunction(
-				retdec::utils::Address startAddr);
+		retdec::common::Function* getConfigFunction(
+				retdec::common::Address startAddr);
 
 		llvm::Function* getLlvmFunction(
-				retdec::utils::Address startAddr);
+				retdec::common::Address startAddr);
 
-		retdec::utils::Address getFunctionAddress(
+		retdec::common::Address getFunctionAddress(
 				const llvm::Function* fnc);
 
 		// Intrinsic functions.
@@ -53,41 +53,43 @@ class Config
 
 		// Register
 		//
-		const retdec::config::Object* getConfigRegister(
+		const retdec::common::Object* getConfigRegister(
 				const llvm::Value* val);
 		std::optional<unsigned> getConfigRegisterNumber(
 				const llvm::Value* val);
-		llvm::GlobalVariable* getLlvmRegister(
-				const std::string& name);
 
 		// Global
 		//
-		const retdec::config::Object* getConfigGlobalVariable(
+		const retdec::common::Object* getConfigGlobalVariable(
 				const llvm::GlobalVariable* gv);
-		const retdec::config::Object* getConfigGlobalVariable(
-				retdec::utils::Address address);
+		const retdec::common::Object* getConfigGlobalVariable(
+				retdec::common::Address address);
 
 		llvm::GlobalVariable* getLlvmGlobalVariable(
-				retdec::utils::Address address);
+				retdec::common::Address address);
 		llvm::GlobalVariable* getLlvmGlobalVariable(
 				const std::string& name,
-				retdec::utils::Address address);
+				retdec::common::Address address);
 
-		retdec::utils::Address getGlobalAddress(
+		retdec::common::Address getGlobalAddress(
 				const llvm::GlobalVariable* gv);
 
 		bool isGlobalVariable(const llvm::Value* val);
 
 		// Local + Stack
 		//
-		const retdec::config::Object* getConfigLocalVariable(
+		const retdec::common::Object* getConfigLocalVariable(
 				const llvm::Value* val);
-		retdec::config::Object* getConfigStackVariable(
+		retdec::common::Object* getConfigStackVariable(
 				const llvm::Value* val);
 
 		llvm::AllocaInst* getLlvmStackVariable(
 				llvm::Function* fnc,
 				int offset);
+
+		llvm::AllocaInst* getLlvmStackVariable(
+				llvm::Function* fnc,
+				const std::string& realName);
 
 		bool isStackVariable(const llvm::Value* val);
 		std::optional<int> getStackVariableOffset(
@@ -95,26 +97,27 @@ class Config
 
 		// Insert
 		//
-		retdec::config::Object* insertGlobalVariable(
+		const retdec::common::Object* insertGlobalVariable(
 				const llvm::GlobalVariable* gv,
-				retdec::utils::Address address,
+				retdec::common::Address address,
 				bool fromDebug = false,
 				const std::string& realName = "",
 				const std::string& cryptoDesc = "");
 
-		retdec::config::Object* insertStackVariable(
+		const retdec::common::Object* insertStackVariable(
 				const llvm::AllocaInst* sv,
 				int offset,
-				bool fromDebug = false);
+				bool fromDebug = false,
+				const std::string& realName = std::string());
 
-		retdec::config::Function* insertFunction(
+		const retdec::common::Function* insertFunction(
 				const llvm::Function* fnc,
-				retdec::utils::Address start = retdec::utils::Address::getUndef,
-				retdec::utils::Address end = retdec::utils::Address::getUndef,
+				retdec::common::Address start = retdec::common::Address::Undefined,
+				retdec::common::Address end = retdec::common::Address::Undefined,
 				bool fromDebug = false);
 
-		retdec::config::Function* renameFunction(
-				retdec::config::Function* fnc,
+		retdec::common::Function* renameFunction(
+				retdec::common::Function* fnc,
 				const std::string& name);
 
 		// Pseudo-functions.
@@ -149,20 +152,10 @@ class Config
 		bool isLlvmX87DataStorePseudoFunction(llvm::Value* f);
 		llvm::CallInst* isLlvmX87DataStorePseudoFunctionCall(llvm::Value* c);
 
-		void setLlvmX87TagStorePseudoFunction(llvm::Function* f);
-		llvm::Function* getLlvmX87TagStorePseudoFunction() const;
-		bool isLlvmX87TagStorePseudoFunction(llvm::Value* f);
-		llvm::CallInst* isLlvmX87TagStorePseudoFunctionCall(llvm::Value* c);
-
 		void setLlvmX87DataLoadPseudoFunction(llvm::Function* f);
 		llvm::Function* getLlvmX87DataLoadPseudoFunction() const;
 		bool isLlvmX87DataLoadPseudoFunction(llvm::Value* f);
 		llvm::CallInst* isLlvmX87DataLoadPseudoFunctionCall(llvm::Value* c);
-
-		void setLlvmX87TagLoadPseudoFunction(llvm::Function* f);
-		llvm::Function* getLlvmX87TagLoadPseudoFunction() const;
-		bool isLlvmX87TagLoadPseudoFunction(llvm::Value* f);
-		llvm::CallInst* isLlvmX87TagLoadPseudoFunctionCall(llvm::Value* c);
 
 		llvm::CallInst* isLlvmX87StorePseudoFunctionCall(llvm::Value* c);
 		llvm::CallInst* isLlvmX87LoadPseudoFunctionCall(llvm::Value* c);
@@ -176,22 +169,21 @@ class Config
 		// Other
 		//
 		llvm::GlobalVariable* getGlobalDummy();
-		utils::FilesystemPath getOutputDirectory();
+		fs::path getOutputDirectory();
 		bool getCryptoPattern(
-				retdec::utils::Address addr,
+				retdec::common::Address addr,
 				std::string& name,
 				std::string& description,
 				llvm::Type*& type) const;
 
 	private:
-		void tagFunctionsWithUsedCryptoGlobals();
+		Config(retdec::config::Config& c);
 
 	public:
 		llvm::Module* _module = nullptr;
 
 	private:
-		retdec::config::Config _configDB;
-		std::string _configPath;
+		retdec::config::Config& _configDB;
 		llvm::GlobalVariable* _globalDummy = nullptr;
 
 		llvm::Function* _callFunction = nullptr;
@@ -200,9 +192,7 @@ class Config
 		llvm::Function* _condBranchFunction = nullptr;
 
 		llvm::Function* _x87DataStoreFunction = nullptr; // void (i3, fp80)
-		llvm::Function* _x87TagStoreFunction = nullptr; // void (i3, i2)
 		llvm::Function* _x87DataLoadFunction = nullptr; // fp80 (i3)
-		llvm::Function* _x87TagLoadFunction = nullptr; // i2 (i3)
 
 		std::map<IntrinsicFunctionCreatorPtr, llvm::Function*> _intrinsicFunctions;
 		std::set<llvm::Function*> _pseudoAsmFunctions;
@@ -211,10 +201,7 @@ class Config
 class ConfigProvider
 {
 	public:
-		static Config* addConfigFile(llvm::Module* m, const std::string& path);
-		static Config* addConfigJsonString(
-				llvm::Module* m,
-				const std::string& json);
+		static Config* addConfig(llvm::Module* m, retdec::config::Config& c);
 		static Config* getConfig(llvm::Module* m);
 		static bool getConfig(llvm::Module* m, Config*& c);
 		static void doFinalization(llvm::Module* m);

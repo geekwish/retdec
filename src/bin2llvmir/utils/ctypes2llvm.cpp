@@ -2,6 +2,7 @@
 #include "retdec/bin2llvmir/providers/lti.h"
 #include "retdec/bin2llvmir/utils/ctypes2llvm.h"
 #include "retdec/ctypes/ctypes.h"
+#include "retdec/utils/string.h"
 
 using namespace llvm;
 
@@ -16,8 +17,6 @@ Ctypes2LlvmTypeVisitor::Ctypes2LlvmTypeVisitor(llvm::Module *m, Config *c) :
 	assert(_config);
 	_type = Abi::getDefaultType(_module);
 }
-
-Ctypes2LlvmTypeVisitor::~Ctypes2LlvmTypeVisitor() = default;
 
 void Ctypes2LlvmTypeVisitor::visit(
 	const std::shared_ptr <retdec::ctypes::ArrayType> &type)

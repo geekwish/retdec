@@ -9,10 +9,11 @@
 
 #include "retdec/loader/loader/elf/elf_image.h"
 
-using namespace retdec::utils;
-using namespace retdec::capstone2llvmir;
 using namespace llvm;
+using namespace retdec::capstone2llvmir;
+using namespace retdec::common;
 using namespace retdec::fileformat;
+using namespace retdec::utils;
 
 namespace retdec {
 namespace bin2llvmir {
@@ -35,7 +36,7 @@ void Decoder::initTranslator()
 	if (a.isX86())
 	{
 		arch = CS_ARCH_X86;
-		switch (_config->getConfig().architecture.getBitSize())
+		switch (a.getBitSize())
 		{
 			case 16: basicMode = CS_MODE_16; break;
 			case 64: basicMode = CS_MODE_64; break;
@@ -46,7 +47,7 @@ void Decoder::initTranslator()
 	else if (a.isMipsOrPic32())
 	{
 		arch = CS_ARCH_MIPS;
-		switch (_config->getConfig().architecture.getBitSize())
+		switch (a.getBitSize())
 		{
 			case 64: basicMode = CS_MODE_MIPS64; break;
 			default:
@@ -56,7 +57,7 @@ void Decoder::initTranslator()
 	else if (a.isPpc())
 	{
 		arch = CS_ARCH_PPC;
-		switch (_config->getConfig().architecture.getBitSize())
+		switch (a.getBitSize())
 		{
 			case 64: basicMode = CS_MODE_64; break;
 			default:
@@ -148,17 +149,9 @@ void Decoder::initEnvironmentPseudoFunctions()
 		dl->setName(names::pseudoX87dataLoadFunction);
 		_config->setLlvmX87DataLoadPseudoFunction(dl);
 
-		auto* tl = c2lX86->getX87TagLoadFunction();
-		tl->setName(names::pseudoX87tagLoadFunction);
-		_config->setLlvmX87TagLoadPseudoFunction(tl);
-
 		auto* ds = c2lX86->getX87DataStoreFunction();
 		ds->setName(names::pseudoX87dataStoreFunction);
 		_config->setLlvmX87DataStorePseudoFunction(ds);
-
-		auto* ts = c2lX86->getX87TagStoreFunction();
-		ts->setName(names::pseudoX87tagStoreFunction);
-		_config->setLlvmX87TagStorePseudoFunction(ts);
 	}
 }
 
@@ -173,9 +166,9 @@ void Decoder::initEnvironmentRegisters()
 		if (_c2l->isRegister(&gv))
 		{
 			unsigned regNum = _c2l->getCapstoneRegister(&gv);
-			auto s = config::Storage::inRegister(gv.getName(), regNum);
+			auto s = common::Storage::inRegister(gv.getName(), regNum);
 
-			config::Object cr(gv.getName(), s);
+			common::Object cr(gv.getName(), s);
 			cr.type.setLlvmIr(llvmObjToString(gv.getValueType()));
 			cr.setRealName(gv.getName());
 			_config->getConfig().registers.insert(cr);
@@ -334,7 +327,7 @@ void Decoder::initAllowedRangesWithSegments()
 		auto& rc = seg->getNonDecodableAddressRanges();
 		for (auto& r : rc)
 		{
-			if (!r.contains(_config->getConfig().getEntryPoint()))
+			if (!r.contains(_config->getConfig().parameters.getEntryPoint()))
 			{
 				_ranges.remove(r.getStart(), r.getEnd());
 			}
@@ -357,7 +350,7 @@ void Decoder::initAllowedRangesWithConfig()
 				p.getStart(),
 				JumpTarget::eType::SELECTED_RANGE_START,
 				_c2l->getBasicMode(),
-				Address::getUndef))
+				Address::Undefined))
 		{
 			createFunction(jt->getAddress());
 			LOG << "\t" << "[+] " << p.getStart() << std::endl;
@@ -404,7 +397,7 @@ void Decoder::initAllowedRangesWithConfig()
 					start,
 					JumpTarget::eType::SELECTED_RANGE_START,
 					df.isThumb() ? CS_MODE_THUMB : _c2l->getBasicMode(),
-					Address::getUndef,
+					Address::Undefined,
 					sz))
 			{
 				foundFs.insert(*fIt);
@@ -419,7 +412,7 @@ void Decoder::initAllowedRangesWithConfig()
 		}
 
 		std::map<
-				retdec::utils::Address,
+				retdec::common::Address,
 				std::shared_ptr<const retdec::fileformat::Symbol>> symtab;
 
 		for (const auto* t : _image->getFileFormat()->getSymbolTables())
@@ -460,7 +453,7 @@ void Decoder::initAllowedRangesWithConfig()
 		{
 			auto& s = sIt->second;
 
-			retdec::utils::Address start = sIt->first;
+			retdec::common::Address start = sIt->first;
 			if (start.isUndefined())
 			{
 				continue;
@@ -484,7 +477,7 @@ void Decoder::initAllowedRangesWithConfig()
 				knownSz = size;
 			}
 
-			retdec::utils::Address end = start + size;
+			retdec::common::Address end = start + size;
 			std::string name = s->getNormalizedName();
 
 			// Exact name match.
@@ -513,7 +506,7 @@ void Decoder::initAllowedRangesWithConfig()
 						start,
 						JumpTarget::eType::SELECTED_RANGE_START,
 						s->isThumbSymbol() ? CS_MODE_THUMB :_c2l->getBasicMode(),
-						Address::getUndef,
+						Address::Undefined,
 						knownSz))
 				{
 					foundFs.insert(*fIt);
@@ -551,8 +544,7 @@ void Decoder::initAllowedRangesWithConfig()
 void Decoder::initJumpTargets()
 {
 	initJumpTargetsConfig();
-	if (!(_config->getConfig().isIda()
-			&& _config->getConfig().parameters.isSomethingSelected()))
+	if (_config->getConfig().parameters.isDetectStaticCode())
 	{
 		initStaticCode();
 	}
@@ -569,9 +561,8 @@ void Decoder::initJumpTargetsConfig()
 {
 	LOG << "\n" << "initJumpTargetsConfig():" << std::endl;
 
-	for (auto& p : _config->getConfig().functions)
+	for (auto& f : _config->getConfig().functions)
 	{
-		config::Function& f = p.second;
 		if (f.getStart().isUndefined())
 		{
 			continue;
@@ -586,7 +577,7 @@ void Decoder::initJumpTargetsConfig()
 				f.getStart(),
 				JumpTarget::eType::CONFIG,
 				f.isThumb() ? CS_MODE_THUMB : _c2l->getBasicMode(),
-				Address::getUndef,
+				Address::Undefined,
 				sz))
 		{
 			auto* nf = createFunction(jt->getAddress());
@@ -606,12 +597,12 @@ void Decoder::initJumpTargetsEntryPoint()
 {
 	LOG << "\n" << "initJumpTargetsEntryPoint():" << std::endl;
 
-	auto ep = _config->getConfig().getEntryPoint();
+	auto ep = _config->getConfig().parameters.getEntryPoint();
 	if (auto* jt = _jumpTargets.push(
 			ep,
 			JumpTarget::eType::ENTRY_POINT,
 			_c2l->getBasicMode(),
-			Address::getUndef))
+			Address::Undefined))
 	{
 		_entryPointFunction = createFunction(jt->getAddress());
 
@@ -652,7 +643,7 @@ void Decoder::initJumpTargetsExterns()
 					a,
 					JumpTarget::eType::IMPORT,
 					_c2l->getBasicMode(),
-					Address::getUndef))
+					Address::Undefined))
 			{
 				auto* f = createFunction(jt->getAddress(), true);
 
@@ -692,7 +683,7 @@ void Decoder::initJumpTargetsImports()
 
 	for (const auto &imp : *impTbl)
 	{
-		utils::Address a = imp->getAddress();
+		common::Address a = imp->getAddress();
 		if (a.isUndefined())
 		{
 			continue;
@@ -738,7 +729,7 @@ void Decoder::initJumpTargetsImports()
 				a,
 				JumpTarget::eType::IMPORT,
 				_c2l->getBasicMode(),
-				Address::getUndef))
+				Address::Undefined))
 		{
 			auto* f = createFunction(jt->getAddress());
 			_imports.emplace(jt->getAddress());
@@ -773,7 +764,7 @@ void Decoder::initJumpTargetsImports()
 				a,
 				JumpTarget::eType::IMPORT,
 				_c2l->getBasicMode(),
-				Address::getUndef))
+				Address::Undefined))
 		{
 			auto* f = createFunction(jt->getAddress());
 			_imports.emplace(jt->getAddress());
@@ -812,7 +803,7 @@ void Decoder::initJumpTargetsExports()
 
 	for (const auto& exp : *exTbl)
 	{
-		utils::Address addr = exp.getAddress();
+		common::Address addr = exp.getAddress();
 		if (addr.isUndefined())
 		{
 			continue;
@@ -832,7 +823,7 @@ void Decoder::initJumpTargetsExports()
 				addr,
 				JumpTarget::eType::EXPORT,
 				_c2l->getBasicMode(),
-				Address::getUndef))
+				Address::Undefined))
 		{
 			auto* nf = createFunction(jt->getAddress());
 			_exports.emplace(jt->getAddress());
@@ -863,7 +854,7 @@ void Decoder::initJumpTargetsSymbols()
 		{
 			continue;
 		}
-		utils::Address addr = a;
+		common::Address addr = a;
 
 		std::optional<std::size_t> sz;
 		unsigned long long tmpSz = 0;
@@ -876,7 +867,7 @@ void Decoder::initJumpTargetsSymbols()
 				addr,
 				JumpTarget::eType::SYMBOL,
 				s->isThumbSymbol() ? CS_MODE_THUMB :_c2l->getBasicMode(),
-				Address::getUndef,
+				Address::Undefined,
 				sz))
 		{
 			auto* nf = createFunction(jt->getAddress());
@@ -905,7 +896,7 @@ void Decoder::initJumpTargetsDebug()
 
 	for (const auto& p : _debug->functions)
 	{
-		utils::Address addr = p.first;
+		common::Address addr = p.first;
 		if (addr.isUndefined())
 		{
 			continue;
@@ -923,7 +914,7 @@ void Decoder::initJumpTargetsDebug()
 				addr,
 				JumpTarget::eType::DEBUG,
 				f.isThumb() ? CS_MODE_THUMB : _c2l->getBasicMode(),
-				Address::getUndef,
+				Address::Undefined,
 				sz))
 		{
 			auto* nf = createFunction(jt->getAddress());
@@ -971,7 +962,7 @@ void Decoder::initStaticCode()
 				sf->getAddress(),
 				JumpTarget::eType::STATIC_CODE,
 				sf->isThumb() ? CS_MODE_THUMB : _c2l->getBasicMode(),
-				Address::getUndef,
+				Address::Undefined,
 				sf->size))
 		{
 			auto* nf = createFunction(jt->getAddress());
@@ -1002,7 +993,7 @@ void Decoder::initVtables()
 {
 	LOG << "\n" << "initVtables():" << std::endl;
 
-	std::vector<const rtti_finder::Vtable*> vtable;
+	std::vector<const common::Vtable*> vtable;
 	for (auto& p : _image->getRtti().getVtablesGcc())
 	{
 		vtable.push_back(&p.second);
@@ -1015,23 +1006,24 @@ void Decoder::initVtables()
 	for (auto* p : vtable)
 	{
 		auto& vt = *p;
-		for (auto& item : vt.virtualFncAddresses)
+		for (auto& item : vt.items)
 		{
 			if (auto* jt = _jumpTargets.push(
-					item.address,
+					item.getTargetFunctionAddress(),
 					JumpTarget::eType::VTABLE,
-					item.isThumb ? CS_MODE_THUMB : _c2l->getBasicMode(),
-					Address::getUndef))
+					item.isThumb() ? CS_MODE_THUMB : _c2l->getBasicMode(),
+					Address::Undefined))
 			{
 				auto* nf = createFunction(jt->getAddress());
 				_vtableFncs.insert(jt->getAddress());
 
-				LOG << "\t" << "[+] " << item.address << " @ "
-						<< nf->getName().str() << std::endl;
+				LOG << "\t" << "[+] " << item.getTargetFunctionAddress()
+						<< " @ " << nf->getName().str() << std::endl;
 			}
 			else
 			{
-				LOG << "\t" << "[-] " << item.address << " (no JT)" << std::endl;
+				LOG << "\t" << "[-] " << item.getTargetFunctionAddress()
+						<< " (no JT)" << std::endl;
 			}
 		}
 	}
@@ -1041,7 +1033,7 @@ void Decoder::initConfigFunctions()
 {
 	for (auto& p : _fnc2addr)
 	{
-		Function* f = p.first;
+		llvm::Function* f = p.first;
 
 		if (_config->getConfigFunction(p.second)) // functions from IDA
 		{
@@ -1052,7 +1044,10 @@ void Decoder::initConfigFunctions()
 		Address end = getFunctionEndAddress(f);
 		end = end > start ? end : Address(start + 1);
 
-		auto* cf = _config->insertFunction(f, start, end);
+		// TODO: this is really bad, should be solved by better design of config
+		// updates
+		common::Function* cf = const_cast<common::Function*>(
+				_config->insertFunction(f, start, end));
 
 		if (_imports.count(start))
 		{

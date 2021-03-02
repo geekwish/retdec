@@ -28,6 +28,7 @@ enum Filters
 	FILTER_46       = 0x46,
 	FILTER_49       = 0x49,
 	FILTER_50       = 0x50,
+	FILTER_51       = 0x51,
 	FILTER_D0       = 0xD0,
 	FILTER_UNKNOWN  = 0xFF,
 };
@@ -37,7 +38,7 @@ enum Filters
  */
 struct Unfilter
 {
-	virtual ~Unfilter() {}
+	virtual ~Unfilter() = default;
 
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) = 0;
 
@@ -49,8 +50,6 @@ struct Unfilter
  */
 struct Unfilter11 : public Unfilter
 {
-	virtual ~Unfilter11() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -59,8 +58,6 @@ struct Unfilter11 : public Unfilter
  */
 struct Unfilter16 : public Unfilter
 {
-	virtual ~Unfilter16() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -69,8 +66,6 @@ struct Unfilter16 : public Unfilter
  */
 struct Unfilter24 : public Unfilter
 {
-	virtual ~Unfilter24() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -79,8 +74,6 @@ struct Unfilter24 : public Unfilter
  */
 struct Unfilter26_46 : public Unfilter
 {
-	virtual ~Unfilter26_46() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -89,8 +82,6 @@ struct Unfilter26_46 : public Unfilter
  */
 struct Unfilter49 : public Unfilter
 {
-	virtual ~Unfilter49() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -99,8 +90,6 @@ struct Unfilter49 : public Unfilter
  */
 struct Unfilter50 : public Unfilter
 {
-	virtual ~Unfilter50() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 
@@ -109,8 +98,6 @@ struct Unfilter50 : public Unfilter
  */
 struct UnfilterD0 : public Unfilter
 {
-	virtual ~UnfilterD0() override {}
-
 	virtual void perform(DynamicBuffer& unpackedData, std::uint32_t filterParam, std::uint32_t filterCount, std::uint32_t startOffset, std::uint32_t size) override;
 };
 

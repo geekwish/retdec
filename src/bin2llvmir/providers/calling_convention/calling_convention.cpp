@@ -40,10 +40,6 @@ CallingConvention::CallingConvention(
 {
 }
 
-CallingConvention::~CallingConvention()
-{
-}
-
 const std::vector<uint32_t>& CallingConvention::getParamRegisters() const
 {
 	return _paramRegs;
@@ -189,16 +185,18 @@ CallingConventionProvider::CallingConventionProvider()
 	registerCC(CallingConvention::ID::CC_PIC32, &Pic32CallingConvention::create);
 }
 
-CallingConventionProvider::~CallingConventionProvider()
-{
-	_id2cc.clear();
-}
-
 CallingConventionProvider* CallingConventionProvider::getProvider()
 {
 	static CallingConventionProvider instance;
 
 	return &instance;
+}
+
+void CallingConventionProvider::clear()
+{
+	// TODO: probably not needed. and definitely not working.
+//	auto* ccp = getProvider();
+//	ccp->_id2cc.clear();
 }
 
 void CallingConventionProvider::registerCC(

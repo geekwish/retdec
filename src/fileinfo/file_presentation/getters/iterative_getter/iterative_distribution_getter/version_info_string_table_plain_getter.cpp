@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -39,14 +40,6 @@ VersionInfoStringTablePlainGetter::VersionInfoStringTablePlainGetter(FileInforma
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-VersionInfoStringTablePlainGetter::~VersionInfoStringTablePlainGetter()
-{
-
-}
-
 std::size_t VersionInfoStringTablePlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.getNumberOfVersionInfoStrings())
@@ -58,7 +51,7 @@ std::size_t VersionInfoStringTablePlainGetter::getBasicInfo(std::size_t structIn
 	info.clear();
 
 	desc.push_back("Number of strings: ");
-	info.push_back(numToStr(fileinfo.getNumberOfVersionInfoStrings()));
+	info.push_back(std::to_string(fileinfo.getNumberOfVersionInfoStrings()));
 
 	return info.size();
 }
@@ -71,7 +64,7 @@ bool VersionInfoStringTablePlainGetter::loadRecord(std::size_t structIndex, std:
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(replaceNonprintableChars(fileinfo.getVersionInfoStringName(recIndex)));
 	record.push_back(replaceNonprintableChars(fileinfo.getVersionInfoStringValue(recIndex)));
 	return true;
@@ -91,3 +84,4 @@ bool VersionInfoStringTablePlainGetter::getFlagDescriptors(std::size_t structInd
 }
 
 } // namespace fileinfo
+} // namespace retdec

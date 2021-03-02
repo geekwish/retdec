@@ -46,7 +46,7 @@ TEST_F(ParamReturnTests, x86PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -55,6 +55,7 @@ TEST_F(ParamReturnTests, x86PtrCallBasicFunctionality)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -68,6 +69,7 @@ TEST_F(ParamReturnTests, x86PtrCallBasicFunctionality)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -112,7 +114,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -121,6 +123,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -134,6 +137,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -183,7 +187,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsNotUsedIfItIsNotASinglePredecessor)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -192,6 +196,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsNotUsedIfItIsNotASinglePredecessor)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -205,6 +210,7 @@ TEST_F(ParamReturnTests, x86PtrCallPrevBbIsNotUsedIfItIsNotASinglePredecessor)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -251,7 +257,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyStackStoresAreUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -260,6 +266,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyStackStoresAreUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -269,6 +276,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyStackStoresAreUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
@@ -316,7 +324,7 @@ TEST_F(ParamReturnTests, x86PtrCallStackAreUsedAsArgumentsInCorrectOrder)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -325,6 +333,7 @@ TEST_F(ParamReturnTests, x86PtrCallStackAreUsedAsArgumentsInCorrectOrder)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -338,6 +347,7 @@ TEST_F(ParamReturnTests, x86PtrCallStackAreUsedAsArgumentsInCorrectOrder)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -382,7 +392,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyContinuousStackOffsetsAreUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -391,6 +401,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyContinuousStackOffsetsAreUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -412,6 +423,7 @@ TEST_F(ParamReturnTests, x86PtrCallOnlyContinuousStackOffsetsAreUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -456,7 +468,7 @@ TEST_F(ParamReturnTests, x86ExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -465,6 +477,7 @@ TEST_F(ParamReturnTests, x86ExternalCallBasicFunctionality)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -478,6 +491,7 @@ TEST_F(ParamReturnTests, x86ExternalCallBasicFunctionality)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -526,7 +540,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -535,6 +549,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 		"functions" : [
 			{
 				"name" : "fnc1",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -548,6 +563,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 			},
 			{
 				"name" : "fnc2",
+				"startAddr" : "0x1235",
 				"locals" : [
 					{
 						"name" : "stack_-16",
@@ -565,6 +581,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
 	auto demangler = DemanglerProvider::addDemangler(
@@ -616,7 +633,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -625,6 +642,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -638,6 +656,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 //	pass.runOnModuleCustom(*module, &config, abi);
@@ -678,7 +697,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -687,6 +706,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -700,6 +720,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 //	pass.runOnModuleCustom(*module, &config, abi);
@@ -745,7 +766,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -754,6 +775,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -767,6 +789,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 //	pass.runOnModuleCustom(*module, &config, abi);
@@ -809,7 +832,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -818,6 +841,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -834,6 +858,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			}
 //		]
 //	})");
+// 	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 //	pass.runOnModuleCustom(*module, &config, abi);
@@ -871,7 +896,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -880,6 +905,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -893,6 +919,7 @@ TEST_F(ParamReturnTests, x86ExternalCallFixOnMultiplePlaces)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 //	pass.runOnModuleCustom(*module, &config, abi);
@@ -932,13 +959,14 @@ TEST_F(ParamReturnTests, x86_64PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "x86"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RDI, getGlobalByName("rdi"));
@@ -1000,14 +1028,14 @@ TEST_F(ParamReturnTests, x86_64PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "x86"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RDI, getGlobalByName("rdi"));
@@ -1083,7 +1111,7 @@ TEST_F(ParamReturnTests, x86_64ExternalCallUseStacksIf6RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1092,6 +1120,7 @@ TEST_F(ParamReturnTests, x86_64ExternalCallUseStacksIf6RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-8",
@@ -1106,6 +1135,7 @@ TEST_F(ParamReturnTests, x86_64ExternalCallUseStacksIf6RegistersUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1189,14 +1219,14 @@ TEST_F(ParamReturnTests, x86_64ExternalCallUsesFPRegistersBasic)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "x86"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1270,14 +1300,14 @@ TEST_F(ParamReturnTests, x86_64ExternalCallUsesFPRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "x86"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1367,13 +1397,14 @@ TEST_F(ParamReturnTests, x86_64UsesJustContinuousSequenceOfRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "x86"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1436,7 +1467,7 @@ TEST_F(ParamReturnTests, ms_x64PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1448,6 +1479,7 @@ TEST_F(ParamReturnTests, ms_x64PtrCallBasicFunctionality)
 			{"name" : "gcc"}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RCX, getGlobalByName("rcx"));
@@ -1509,7 +1541,7 @@ TEST_F(ParamReturnTests, ms_x64PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1521,7 +1553,7 @@ TEST_F(ParamReturnTests, ms_x64PtrCallPrevBbIsUsedOnlyIfItIsASinglePredecessor)
 			{"name" : "gcc"}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RCX, getGlobalByName("rcx"));
@@ -1593,7 +1625,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUseStacksIf4RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1602,6 +1634,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUseStacksIf4RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-8",
@@ -1622,6 +1655,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUseStacksIf4RegistersUsed)
 		]
 
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1699,7 +1733,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1711,7 +1745,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegisters)
 			{"name" : "gcc"}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1778,7 +1812,7 @@ TEST_F(ParamReturnTests, ms_x64UsesJustContinuousSequenceOfRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1790,6 +1824,7 @@ TEST_F(ParamReturnTests, ms_x64UsesJustContinuousSequenceOfRegisters)
 			{"name" : "gcc"}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1856,7 +1891,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegistersAdvanced)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -1868,7 +1903,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegistersAdvanced)
 			{"name" : "gcc"}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(X86_REG_RAX, getGlobalByName("rax"));
@@ -1938,7 +1973,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegistersAdvanced)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "little",
@@ -1947,6 +1982,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegistersAdvanced)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -1968,6 +2004,7 @@ TEST_F(ParamReturnTests, ms_x64ExternalCallUsesFPRegistersAdvanced)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 
@@ -1985,13 +2022,14 @@ TEST_F(ParamReturnTests, ppcPtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2040,13 +2078,14 @@ TEST_F(ParamReturnTests, ppcExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2100,13 +2139,14 @@ TEST_F(ParamReturnTests, ppcExternalCallBasicFPFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2162,13 +2202,14 @@ TEST_F(ParamReturnTests, ppcExternalCallDoNotUseObjectsIfTheyAreNotRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
@@ -2211,13 +2252,14 @@ TEST_F(ParamReturnTests, ppcExternalCallFilterRegistersOnMultiplePlaces)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
 	abi->addRegister(PPC_REG_R4, getGlobalByName("r4"));
@@ -2276,13 +2318,14 @@ TEST_F(ParamReturnTests, ppcExternalCallDoNotUseAllRegisters)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R1, getGlobalByName("r1"));
@@ -2332,13 +2375,14 @@ TEST_F(ParamReturnTests, ppcExternalCallSortRegistersIntoCorrectOrder)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
 			"name" : "powerpc"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2393,7 +2437,7 @@ TEST_F(ParamReturnTests, ppcExternalCallDoNotUseStacksIfLessThan7RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "big",
@@ -2402,6 +2446,7 @@ TEST_F(ParamReturnTests, ppcExternalCallDoNotUseStacksIfLessThan7RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -2411,6 +2456,7 @@ TEST_F(ParamReturnTests, ppcExternalCallDoNotUseStacksIfLessThan7RegistersUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2461,14 +2507,14 @@ TEST_F(ParamReturnTests, ppc64PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "big",
 			"name" : "powerpc64"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	AbiPowerpc64 abi(module.get(), &config);
 
 	abi.addRegister(PPC_REG_R3, getGlobalByName("r3"));
@@ -2545,13 +2591,14 @@ TEST_F(ParamReturnTests, armPtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
 			"name" : "arm"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(ARM_REG_R0, getGlobalByName("r0"));
@@ -2600,13 +2647,14 @@ TEST_F(ParamReturnTests, armExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
 			"name" : "arm"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(ARM_REG_R0, getGlobalByName("r0"));
@@ -2668,7 +2716,7 @@ TEST_F(ParamReturnTests, armExternalCallUseStacksIf4RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -2677,6 +2725,7 @@ TEST_F(ParamReturnTests, armExternalCallUseStacksIf4RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -2690,6 +2739,7 @@ TEST_F(ParamReturnTests, armExternalCallUseStacksIf4RegistersUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(ARM_REG_R0, getGlobalByName("r0"));
@@ -2760,13 +2810,14 @@ TEST_F(ParamReturnTests, arm64PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "arm aarch64"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	AbiArm64 abi(module.get(), &config);
 
 	abi.addRegister(ARM64_REG_X0, getGlobalByName("x0"));
@@ -2817,14 +2868,14 @@ TEST_F(ParamReturnTests, arm64ExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "arm aarch64"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	AbiArm64 abi(module.get(), &config);
 
 	abi.addRegister(ARM64_REG_X0, getGlobalByName("x0"));
@@ -2894,7 +2945,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallUseStacksIf8RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -2903,6 +2954,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallUseStacksIf8RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -2916,6 +2968,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallUseStacksIf8RegistersUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	AbiArm64 abi(module.get(), &config);
 
 	abi.addRegister(ARM64_REG_X0, getGlobalByName("x0"));
@@ -3003,13 +3056,14 @@ TEST_F(ParamReturnTests, arm64ExternalCallHasDouleParameter)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "arm aarch64"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	AbiArm64 abi(module.get(), &config);
 
 	abi.addRegister(ARM64_REG_X0, getGlobalByName("x0"));
@@ -3083,7 +3137,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallHasDouleParameter)
 //			ret void
 //		}
 //	)");
-//	auto config = Config::fromJsonString(module.get(), R"({
+//	auto c = config::Config::fromJsonString(R"({
 //		"architecture" : {
 //			"bitSize" : 32,
 //			"endian" : "big",
@@ -3092,6 +3146,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallHasDouleParameter)
 //		"functions" : [
 //			{
 //				"name" : "fnc",
+//				"startAddr" : "0x1234",
 //				"locals" : [
 //					{
 //						"name" : "stack_-4",
@@ -3147,6 +3202,7 @@ TEST_F(ParamReturnTests, arm64ExternalCallHasDouleParameter)
 //			}
 //		]
 //	})");
+//	auto config = Config::fromConfig(module.get(), c);
 //	auto abi = AbiProvider::addAbi(module.get(), &config);
 //
 
@@ -3164,13 +3220,14 @@ TEST_F(ParamReturnTests, mipsPtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
 			"name" : "mips"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3215,13 +3272,14 @@ TEST_F(ParamReturnTests, mipsExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
 			"name" : "mips"
 		}
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3275,7 +3333,7 @@ TEST_F(ParamReturnTests, mipsExternalCallUseStacksIf4RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3284,6 +3342,7 @@ TEST_F(ParamReturnTests, mipsExternalCallUseStacksIf4RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3297,6 +3356,7 @@ TEST_F(ParamReturnTests, mipsExternalCallUseStacksIf4RegistersUsed)
 			}
 		]
 	})");
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	abi->addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3360,14 +3420,14 @@ TEST_F(ParamReturnTests, mips64PtrCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "mips64"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	AbiMips64 abi(module.get(), &config);
 
 	abi.addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3416,14 +3476,14 @@ TEST_F(ParamReturnTests, mips64ExternalCallBasicFunctionality)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
 			"name" : "mips64"
 		}
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	AbiMips64 abi(module.get(), &config);
 
 	abi.addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3489,7 +3549,7 @@ TEST_F(ParamReturnTests, mips64ExternalCallUseStacksIf8RegistersUsed)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 64,
 			"endian" : "little",
@@ -3498,6 +3558,7 @@ TEST_F(ParamReturnTests, mips64ExternalCallUseStacksIf8RegistersUsed)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3511,7 +3572,7 @@ TEST_F(ParamReturnTests, mips64ExternalCallUseStacksIf8RegistersUsed)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	AbiMips64 abi(module.get(), &config);
 
 	abi.addRegister(MIPS_REG_A0, getGlobalByName("a0"));
@@ -3599,7 +3660,7 @@ TEST_F(ParamReturnTests, x86FastcallBasic)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3612,6 +3673,7 @@ TEST_F(ParamReturnTests, x86FastcallBasic)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3625,11 +3687,12 @@ TEST_F(ParamReturnTests, x86FastcallBasic)
 			},
 			{
 				"name" : "a",
+				"startAddr" : "0x5678",
 				"callingConvention" : "fastcall"
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
 	abi->addRegister(X86_REG_ECX, getGlobalByName("ecx"));
@@ -3693,7 +3756,7 @@ TEST_F(ParamReturnTests, x86FastcallLargeTypeCatch)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3706,6 +3769,7 @@ TEST_F(ParamReturnTests, x86FastcallLargeTypeCatch)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3720,12 +3784,13 @@ TEST_F(ParamReturnTests, x86FastcallLargeTypeCatch)
 			},
 			{
 				"name" : "a",
+				"startAddr" : "0x1235",
 				"callingConvention" : "fastcall"
 			}
 		]
 
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_ECX, getGlobalByName("ecx"));
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
@@ -3782,7 +3847,7 @@ TEST_F(ParamReturnTests, x86PascalBasic)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3795,6 +3860,7 @@ TEST_F(ParamReturnTests, x86PascalBasic)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3808,7 +3874,7 @@ TEST_F(ParamReturnTests, x86PascalBasic)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 
 	auto typeConfig = std::make_unique<ctypesparser::TypeConfig>();
@@ -3859,7 +3925,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallBasic)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3872,6 +3938,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallBasic)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3890,7 +3957,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallBasic)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
 	abi->addRegister(X86_REG_EDX, getGlobalByName("edx"));
@@ -3958,7 +4025,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallLargeType)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -3971,6 +4038,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallLargeType)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -3989,7 +4057,7 @@ TEST_F(ParamReturnTests, x86PascalFastcallLargeType)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
 	abi->addRegister(X86_REG_EDX, getGlobalByName("edx"));
@@ -4055,7 +4123,7 @@ TEST_F(ParamReturnTests, x86WatcomBasic)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -4068,6 +4136,7 @@ TEST_F(ParamReturnTests, x86WatcomBasic)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -4081,7 +4150,7 @@ TEST_F(ParamReturnTests, x86WatcomBasic)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
 	abi->addRegister(X86_REG_EBX, getGlobalByName("ebx"));
@@ -4148,7 +4217,7 @@ TEST_F(ParamReturnTests, x86WatcomPassDouble)
 			ret void
 		}
 	)");
-	auto config = Config::fromJsonString(module.get(), R"({
+	auto c = config::Config::fromJsonString(R"({
 		"architecture" : {
 			"bitSize" : 32,
 			"endian" : "little",
@@ -4161,6 +4230,7 @@ TEST_F(ParamReturnTests, x86WatcomPassDouble)
 		"functions" : [
 			{
 				"name" : "fnc",
+				"startAddr" : "0x1234",
 				"locals" : [
 					{
 						"name" : "stack_-4",
@@ -4174,7 +4244,7 @@ TEST_F(ParamReturnTests, x86WatcomPassDouble)
 			}
 		]
 	})");
-
+	auto config = Config::fromConfig(module.get(), c);
 	auto abi = AbiProvider::addAbi(module.get(), &config);
 	abi->addRegister(X86_REG_EAX, getGlobalByName("eax"));
 	abi->addRegister(X86_REG_EDX, getGlobalByName("edx"));

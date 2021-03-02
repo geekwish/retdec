@@ -5,7 +5,6 @@
  */
 
 #include <fstream>
-#include <iostream>
 
 #include "retdec/ctypes/floating_point_type.h"
 #include "retdec/ctypes/function_type.h"
@@ -51,7 +50,7 @@ Lti::Lti(
 
 	for (auto& l : _config->getConfig().parameters.libraryTypeInfoPaths)
 	{
-		if (retdec::utils::startsWith(retdec::utils::stripDirs(l), "cstdlib"))
+		if (retdec::utils::endsWith(l, "cstdlib.json"))
 		{
 			loadLtiFile(l);
 		}
@@ -61,24 +60,22 @@ Lti::Lti(
 
 	for (auto &l : _config->getConfig().parameters.libraryTypeInfoPaths)
 	{
-		auto fileName = retdec::utils::stripDirs(l);
-
-		if (retdec::utils::startsWith(fileName, "cstdlib"))
+		if (retdec::utils::endsWith(l, "cstdlib.json"))
 		{
 			continue;
 		}
 
-		if (retdec::utils::startsWith(fileName, "windows")
+		if (retdec::utils::endsWith(l, "windows.json")
 				&& _config->getConfig().fileFormat.isPe())
 		{
 			loadLtiFile(l);
 		}
 		else if (winDriver
-				&& retdec::utils::startsWith(fileName, "windrivers"))
+				&& retdec::utils::endsWith(l, "windrivers.json"))
 		{
 			loadLtiFile(l);
 		}
-		else if (retdec::utils::startsWith(fileName, "linux")
+		else if (retdec::utils::endsWith(l, "linux.json")
 				&& (_config->getConfig().fileFormat.isElf()
 				|| _config->getConfig().fileFormat.isMacho()
 				|| _config->getConfig().fileFormat.isIntelHex()
@@ -86,7 +83,7 @@ Lti::Lti(
 		{
 			loadLtiFile(l);
 		}
-		else if (retdec::utils::startsWith(fileName, "arm") &&
+		else if (retdec::utils::endsWith(l, "arm.json") &&
 				_config->getConfig().architecture.isArm32OrThumb())
 		{
 			loadLtiFile(l);
@@ -209,7 +206,10 @@ Lti::FunctionPair Lti::getPairFunction(const std::string& name)
 				_module->getFunctionList().end(),
 				ret.first);
 
-		auto* cf = _config->insertFunction(ret.first);
+		// TODO: this is really bad, should be solved by better design of config
+		// updates
+		common::Function* cf = const_cast<common::Function*>(
+				_config->insertFunction(ret.first));
 		cf->setDeclarationString(ret.second->getDeclaration());
 	}
 

@@ -7,23 +7,8 @@
 #include "fileinfo/file_information/file_information_types/tls_info.h"
 #include "fileinfo/file_information/file_information_types/type_conversions.h"
 
+namespace retdec {
 namespace fileinfo {
-
-/**
- * Constructor
- */
-TlsInfo::TlsInfo() : tlsInfo(nullptr)
-{
-
-}
-
-/**
- * Destructor
- */
-TlsInfo::~TlsInfo()
-{
-
-}
 
 /**
  * Get raw data start address
@@ -134,3 +119,4 @@ bool TlsInfo::isUsed() const
 }
 
 } // namespace fileinfo
+} // namespace retdec

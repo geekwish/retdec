@@ -5,7 +5,6 @@
  */
 
 #include <iomanip>
-#include <iostream>
 
 #include "capstone2llvmir/powerpc/powerpc_impl.h"
 
@@ -22,11 +21,6 @@ Capstone2LlvmIrTranslatorPowerpc_impl::Capstone2LlvmIrTranslatorPowerpc_impl(
 	// This needs to be called from concrete's class ctor, not abstract's
 	// class ctor, so that virtual table is properly initialized.
 	initialize();
-}
-
-Capstone2LlvmIrTranslatorPowerpc_impl::~Capstone2LlvmIrTranslatorPowerpc_impl()
-{
-	// Nothing specific to PowerPC.
 }
 
 //

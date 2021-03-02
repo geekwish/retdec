@@ -9,8 +9,6 @@
 
 #include <string>
 
-#include <openssl/x509.h>
-
 namespace retdec {
 namespace fileformat {
 
@@ -38,8 +36,7 @@ class Certificate
 			std::string generationQualifier;
 			std::string emailAddress;
 		};
-	private:
-		X509 *certImpl;
+	public:
 		std::string validSince;
 		std::string validUntil;
 		std::string publicKey;
@@ -53,17 +50,7 @@ class Certificate
 		Attributes subject;
 		Attributes issuer;
 
-		void load();
-		void loadValidity();
-		void loadPublicKey();
-		void loadSignatureAlgorithm();
-		void loadSerialNumber();
-		void loadIssuerAndSubject();
-		void calculateHashes();
 	public:
-		Certificate(X509 *cert);
-		~Certificate();
-
 		/// @name Getters
 		/// @{
 		const std::string& getValidSince() const;

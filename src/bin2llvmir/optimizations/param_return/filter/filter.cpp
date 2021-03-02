@@ -10,7 +10,6 @@
 #include "retdec/bin2llvmir/optimizations/param_return/filter/filter.h"
 #include "retdec/bin2llvmir/optimizations/param_return/filter/ms_x64.h"
 
-using namespace retdec::utils;
 using namespace llvm;
 
 namespace retdec {
@@ -27,10 +26,6 @@ Filter::Filter(
 		const CallingConvention* cc) :
 	_abi(abi),
 	_cc(cc)
-{
-}
-
-Filter::~Filter()
 {
 }
 
@@ -179,6 +174,10 @@ void Filter::filterCalls(DataFlowEntry* de) const
 		retTempl = callRets.front();
 	}
 
+	/* When there is definition available we should
+	 * use arguments from there. This is more reliable than
+	 * constructing intersations of used arguments in file.
+	 */
 	if (de->hasDefinition())
 	{
 		FilterableLayout defArgs;
@@ -196,12 +195,24 @@ void Filter::filterCalls(DataFlowEntry* de) const
 			// below.
 			filterArgsByKnownTypes(defArgs);
 		}
-		else if (de->args().empty())
+		else if (de->args().empty() && (
+				// possible wrapper
+				(de->numberOfCalls() == 1 && !de->hasBranches())
+				// Possible error in stack analysis.
+				|| (de->storesOnRawStack(*_abi))
+				// Selective decompilation. Definition exists
+				// but is empty -> we do not trust it.
+				|| (!de->isFullyDecoded())
+			))
 		{
+			// In this case it might be wrapper that
+			// takes arguments from call and do not modify them
+			// in definition.
 			filterCallArgsByDefLayout(defArgs, argTempl);
 			de->setArgs(createGroupedArgValues(defArgs));
 		}
-		else if (argTempl.stacks.size() > defArgs.stacks.size())
+		else if (argTempl.stacks.size() > defArgs.stacks.size()
+				&& de->numberOfCalls() == 1 && !de->hasBranches())
 		{
 			if (argTempl.gpRegisters.size() == defArgs.gpRegisters.size()
 				&& argTempl.fpRegisters.size() == defArgs.fpRegisters.size()
@@ -486,7 +497,10 @@ std::vector<Type*> Filter::expandTypes(const std::vector<Type*>& types) const
 			auto t = toExpand.front();
 			toExpand.pop_front();
 
-			if (auto* st = dyn_cast<StructType>(t))
+			if (t == nullptr) {
+				expanded.push_back(_abi->getDefaultType());
+			}
+			else if (auto* st = dyn_cast<StructType>(t))
 			{
 				for (auto& e : st->elements())
 				{
@@ -593,8 +607,13 @@ size_t Filter::fetchRegsForType(
 	{
 		return  getNumberOfStacksForType(type);
 	}
+	auto* reg = _abi->getRegister(regs.front());
+	if (reg == nullptr)
+	{
+		return  getNumberOfStacksForType(type);
+	}
 
-	Type* registerType = _abi->getRegister(regs.front())->getType();
+	Type* registerType = reg->getType();
 	std::size_t registerSize = _abi->getTypeByteSize(registerType);
 	std::size_t typeSize = type->isVoidTy() ?
 					_abi->getWordSize() : _abi->getTypeByteSize(type);
@@ -745,22 +764,29 @@ void Filter::filterRetsByKnownTypes(FilterableLayout& lay) const
 	else if (!retType->isVoidTy())
 	{
 		assert(!gpRegs.empty());
-
-		std::size_t typeSize = _abi->getTypeByteSize(retType);
-		Type* registerType = _abi->getRegister(gpRegs.front())->getType();
-		std::size_t registerSize = _abi->getTypeByteSize(registerType);
-
-		if (typeSize <= registerSize ||
-				(typeSize > registerSize*gpRegs.size()))
+		if (auto* defaultReg = _abi->getRegister(gpRegs.front()))
 		{
-			regGPValues.push_back(gpRegs.front());
+			std::size_t typeSize = _abi->getTypeByteSize(retType);
+			Type* registerType = defaultReg->getType();
+			std::size_t registerSize = _abi->getTypeByteSize(registerType);
+
+			if (typeSize <= registerSize ||
+					(typeSize > registerSize*gpRegs.size()))
+			{
+				regGPValues.push_back(gpRegs.front());
+			}
+
+			std::size_t numOfRegs = typeSize/registerSize;
+			for (std::size_t i = 0; i < numOfRegs && i < gpRegs.size(); i++)
+			{
+				regGPValues.push_back(gpRegs[i]);
+			}
+		}
+		else
+		{
+			retType = nullptr;
 		}
 
-		std::size_t numOfRegs = typeSize/registerSize;
-		for (std::size_t i = 0; i < numOfRegs && i < gpRegs.size(); i++)
-		{
-			regGPValues.push_back(gpRegs[i]);
-		}
 	}
 
 	lay.gpRegisters = std::move(regGPValues);

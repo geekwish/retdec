@@ -11,23 +11,8 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
-
-/**
- * Constructor
- */
-VisualBasicInfo::VisualBasicInfo() : used(false), visualBasicInfo(nullptr)
-{
-
-}
-
-/**
- * Destructor
- */
-VisualBasicInfo::~VisualBasicInfo()
-{
-
-}
 
 /**
  * Get language DLL
@@ -413,3 +398,4 @@ bool VisualBasicInfo::isPcode() const
 }
 
 } // namespace fileinfo
+} // namespace retdec

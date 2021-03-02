@@ -35,11 +35,6 @@ Abi::Abi(llvm::Module* m, Config* c) :
 
 }
 
-Abi::~Abi()
-{
-
-}
-
 bool Abi::isRegister(const llvm::Value* val) const
 {
 	return _regs2id.count(val);
@@ -340,10 +335,9 @@ Abi* AbiProvider::addAbi(
 	}
 	else if (c->getConfig().architecture.isX86_64())
 	{
-		bool isMinGW = c->getConfig().tools.isGcc()
-				&& c->getConfig().fileFormat.isPe();
+		bool isPe = c->getConfig().fileFormat.isPe();
 
-		if (isMinGW || c->getConfig().tools.isMsvc())
+		if (isPe || c->getConfig().tools.isMsvc())
 		{
 			auto p = _module2abi.emplace(m, std::make_unique<AbiMS_X64>(m, c));
 			return p.first->second.get();

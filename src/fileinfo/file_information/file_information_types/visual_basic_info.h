@@ -11,6 +11,7 @@
 #include "retdec/fileformat/types/visual_basic/visual_basic_object.h"
 #include "retdec/fileformat/types/visual_basic/visual_basic_extern.h"
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -19,12 +20,9 @@ namespace fileinfo {
 class VisualBasicInfo
 {
 	private:
-		bool used;
-		const retdec::fileformat::VisualBasicInfo *visualBasicInfo;
+		bool used = false;
+		const retdec::fileformat::VisualBasicInfo *visualBasicInfo = nullptr;
 	public:
-		VisualBasicInfo();
-		~VisualBasicInfo();
-
 		/// @name Getters
 		/// @{
 		std::string getLanguageDLL() const;
@@ -77,5 +75,6 @@ class VisualBasicInfo
 };
 
 } // namespace fileinfo
+} // namespace retdec
 
 #endif

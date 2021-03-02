@@ -12,7 +12,7 @@
 #include <llvm/IR/Module.h>
 
 #include "retdec/bin2llvmir/providers/config.h"
-#include "retdec/config/tool_info.h"
+#include "retdec/common/tool_info.h"
 #include "retdec/demangler/demangler.h"
 #include "retdec/ctypesparser/type_config.h"
 
@@ -47,6 +47,8 @@ public:
 	std::string demangleToString(const std::string &mangled);
 
 	FunctionPair getPairFunction(const std::string &mangled);
+
+	demangler::Demangler* getDemangler();
 
 private:
 	llvm::Type *getLlvmType(std::shared_ptr<retdec::ctypes::Type> type);

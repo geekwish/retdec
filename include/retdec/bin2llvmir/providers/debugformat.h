@@ -9,6 +9,7 @@
 
 #include <llvm/IR/Module.h>
 
+#include "retdec/bin2llvmir/providers/demangler.h"
 #include "retdec/bin2llvmir/providers/fileimage.h"
 #include "retdec/debugformat/debugformat.h"
 
@@ -34,7 +35,7 @@ class DebugFormatProvider
 {
 	private:
 		using SymbolTable = std::map<
-				retdec::utils::Address,
+				retdec::common::Address,
 				const retdec::fileformat::Symbol*>;
 
 	public:
@@ -42,7 +43,6 @@ class DebugFormatProvider
 				llvm::Module* m,
 				retdec::loader::Image* objf,
 				const std::string& pdbFile,
-				const retdec::utils::Address& imageBase,
 				Demangler* demangler);
 
 		static DebugFormat* getDebugFormat(llvm::Module* m);

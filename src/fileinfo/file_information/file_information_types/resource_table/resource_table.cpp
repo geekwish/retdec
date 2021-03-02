@@ -7,23 +7,8 @@
 #include "fileinfo/file_information/file_information_types/resource_table/resource_table.h"
 #include "fileinfo/file_information/file_information_types/type_conversions.h"
 
+namespace retdec {
 namespace fileinfo {
-
-/**
- * Constructor
- */
-ResourceTable::ResourceTable() : table(nullptr)
-{
-
-}
-
-/**
- * Destructor
- */
-ResourceTable::~ResourceTable()
-{
-
-}
 
 /**
  * Get number of resources in table
@@ -327,3 +312,4 @@ bool ResourceTable::hasRecords() const
 }
 
 } // namespace fileinfo
+} // namespace retdec

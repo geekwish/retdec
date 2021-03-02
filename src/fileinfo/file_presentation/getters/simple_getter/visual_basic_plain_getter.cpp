@@ -5,11 +5,13 @@
  */
 
 #include "retdec/fileformat/utils/conversions.h"
+#include "retdec/utils/string.h"
 #include "fileinfo/file_presentation/getters/simple_getter/visual_basic_plain_getter.h"
 
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -17,14 +19,6 @@ namespace fileinfo {
  * @param fileInfo Information about file
  */
 VisualBasicPlainGetter::VisualBasicPlainGetter(FileInformation &fileInfo) : SimpleGetter(fileInfo)
-{
-
-}
-
-/**
- * Destructor
- */
-VisualBasicPlainGetter::~VisualBasicPlainGetter()
 {
 
 }
@@ -89,3 +83,4 @@ std::size_t VisualBasicPlainGetter::loadInformation(std::vector<std::string> &de
 }
 
 } // namespace fileinfo
+} // namespace retdec

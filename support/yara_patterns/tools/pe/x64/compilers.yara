@@ -117,6 +117,57 @@ rule aut2exe_33143 {
 		$1 at 0x400
 }
 
+rule aut2exe_uv_01 {
+	meta:
+		tool = "C"
+		name = "Aut2Exe"
+		language = "AutoIt"
+		bytecode = true
+	strings:
+		$1 = ">AUTOIT SCRIPT<"
+		$2 = ">AUTOIT SCRIPT<" wide
+		$3 = ">AUTOIT UNICODE SCRIPT<" wide
+	condition:
+		pe.is_64bit() and
+		for 1 of them : (
+			@ > pe.sections[pe.section_index(".rdata")].raw_data_offset and
+			@ < pe.sections[pe.section_index(".rdata")].raw_data_offset +
+			pe.sections[pe.section_index(".rdata")].raw_data_size
+		)
+}
+
+rule autohotkey_uv_01 {
+	meta:
+		tool = "C"
+		name = "AHK2Exe"
+		language = "AutoHotKey"
+		bytecode = true
+	strings:
+		$1 = ">AUTOHOTKEY SCRIPT<"
+		$2 = ">AUTOHOTKEY SCRIPT<" wide
+	condition:
+		pe.is_64bit() and
+		for 1 of them : (
+			@ > pe.sections[pe.section_index(".rdata")].raw_data_offset and
+			@ < pe.sections[pe.section_index(".rdata")].raw_data_offset +
+			pe.sections[pe.section_index(".rdata")].raw_data_size
+		) or
+		for 1 i in (0 .. pe.number_of_resources) : (
+			pe.resources[i].name_string matches />AUTOHOTKEY SCRIPT</
+		)
+}
+
+rule f2ko_bat2exe_uv_01 {
+	meta:
+		tool = "C"
+		name = "F2KO Bat2Exe"
+		pattern = "4883EC??49C7C0????????4831D248B9????????????????E8????????4831C9E8????????4889??????????4D31C048C7C2001000004831C9E8????????4889"
+	strings:
+		$1 = { 48 83 EC ?? 49 C7 C0 ?? ?? ?? ?? 48 31 D2 48 B9 ?? ?? ?? ?? ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 31 C9 E8 ?? ?? ?? ?? 48 89 ?? ?? ?? ?? ?? 4D 31 C0 48 C7 C2 00 10 00 00 48 31 C9 E8 ?? ?? ?? ?? 48 89 }
+	condition:
+		$1 at pe.entry_point
+}
+
 rule msvc_general
 {
 	meta:

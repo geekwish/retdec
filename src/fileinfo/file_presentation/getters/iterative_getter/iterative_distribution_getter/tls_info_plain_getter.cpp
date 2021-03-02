@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 namespace
@@ -39,14 +40,6 @@ TlsInfoPlainGetter::TlsInfoPlainGetter(FileInformation &fileInfo) : IterativeDis
 	loadRecords();
 }
 
-/**
- * Destructor
- */
-TlsInfoPlainGetter::~TlsInfoPlainGetter()
-{
-
-}
-
 std::size_t TlsInfoPlainGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || !fileinfo.isTlsUsed())
@@ -64,7 +57,7 @@ std::size_t TlsInfoPlainGetter::getBasicInfo(std::size_t structIndex, std::vecto
 	desc.push_back("Address of index             : ");
 	desc.push_back("Size of zero fill            : ");
 	desc.push_back("Characteristics              : ");
-	info.push_back(numToStr(fileinfo.getTlsNumberOfCallBacks()));
+	info.push_back(std::to_string(fileinfo.getTlsNumberOfCallBacks()));
 	info.push_back(fileinfo.getTlsRawDataStartAddrStr(hexWithPrefix));
 	info.push_back(fileinfo.getTlsRawDataEndAddrStr(hexWithPrefix));
 	info.push_back(fileinfo.getTlsIndexAddrStr(hexWithPrefix));
@@ -83,7 +76,7 @@ bool TlsInfoPlainGetter::loadRecord(std::size_t structIndex, std::size_t recInde
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(fileinfo.getTlsCallBackAddrStr(recIndex, hexWithPrefix));
 	return true;
 }
@@ -102,3 +95,4 @@ bool TlsInfoPlainGetter::getFlagDescriptors(std::size_t structIndex, std::vector
 }
 
 } // namespace fileinfo
+} // namespace retdec

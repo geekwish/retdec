@@ -4,36 +4,16 @@
  * @copyright (c) 2017 Avast Software, licensed under the MIT license
  */
 
-#include "retdec/crypto/crypto.h"
 #include "retdec/utils/string.h"
 #include "retdec/utils/system.h"
 #include "retdec/utils/conversion.h"
+#include "retdec/fileformat/utils/crypto.h"
 #include "retdec/fileformat/types/visual_basic/visual_basic_info.h"
 
 using namespace retdec::utils;
 
 namespace retdec {
 namespace fileformat {
-
-/**
- * Constructor
- */
-VisualBasicInfo::VisualBasicInfo() : languageDLLPrimaryLCID(0), languageDLLSecondaryLCID(0),
-	projectPrimaryLCID(0), projectSecondaryLCID(0), typeLibLCID(0), typeLibMajorVersion(0),
-	typeLibMinorVersion(0), validLanguageDLLPrimaryLCID(false), validLanguageDLLSecondaryLCID(false),
-	validProjectPrimaryLCID(false), validProjectSecondaryLCID(false), validTypeLibLCID(false),
-	validTypeLibMajorVersion(false), validTypeLibMinorVersion(false), pcodeFlag(false)
-{
-
-}
-
-/**
- * Destructor
- */
-VisualBasicInfo::~VisualBasicInfo()
-{
-
-}
 
 /**
  * Get language DLL
@@ -704,9 +684,9 @@ void VisualBasicInfo::computeExternTableHashes()
 		}
 	}
 
-	externTableHashCrc32 = retdec::crypto::getCrc32(hashBytes.data(), hashBytes.size());
-	externTableHashMd5 = retdec::crypto::getMd5(hashBytes.data(), hashBytes.size());
-	externTableHashSha256 = retdec::crypto::getSha256(hashBytes.data(), hashBytes.size());
+	externTableHashCrc32 = getCrc32(hashBytes.data(), hashBytes.size());
+	externTableHashMd5 = getMd5(hashBytes.data(), hashBytes.size());
+	externTableHashSha256 = getSha256(hashBytes.data(), hashBytes.size());
 }
 
 /**
@@ -746,9 +726,9 @@ void VisualBasicInfo::computeObjectTableHashes()
 		}
 	}
 
-	objectTableHashCrc32 = retdec::crypto::getCrc32(hashBytes.data(), hashBytes.size());
-	objectTableHashMd5 = retdec::crypto::getMd5(hashBytes.data(), hashBytes.size());
-	objectTableHashSha256 = retdec::crypto::getSha256(hashBytes.data(), hashBytes.size());
+	objectTableHashCrc32 = getCrc32(hashBytes.data(), hashBytes.size());
+	objectTableHashMd5 = getMd5(hashBytes.data(), hashBytes.size());
+	objectTableHashSha256 = getSha256(hashBytes.data(), hashBytes.size());
 }
 
 /**

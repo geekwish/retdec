@@ -9,27 +9,26 @@
 #include <climits>
 #include <cstring>
 #include <functional>
-#include <iostream>
 #include <sstream>
 
-#include <pelib/PeLibInc.h>
-
-#include "retdec/crypto/crypto.h"
 #include "retdec/utils/conversion.h"
 #include "retdec/utils/file_io.h"
 #include "retdec/utils/string.h"
 #include "retdec/utils/system.h"
+#include "retdec/utils/io/log.h"
 #include "retdec/fileformat/file_format/file_format.h"
-
 #include "retdec/fileformat/utils/byte_array_buffer.h"
 #include "retdec/fileformat/file_format/intel_hex/intel_hex_format.h"
 #include "retdec/fileformat/file_format/raw_data/raw_data_format.h"
 #include "retdec/fileformat/types/strings/character_iterator.h"
 #include "retdec/fileformat/utils/conversions.h"
+#include "retdec/fileformat/utils/crypto.h"
 #include "retdec/fileformat/utils/file_io.h"
 #include "retdec/fileformat/utils/other.h"
+#include "retdec/pelib/PeLibInc.h"
 
 using namespace retdec::utils;
+using namespace retdec::utils::io;
 using namespace PeLib;
 
 namespace retdec {
@@ -199,9 +198,9 @@ void FileFormat::init()
 	}
 	else
 	{
-		crc32 = retdec::crypto::getCrc32(bytes.data(), bytes.size());
-		md5 = retdec::crypto::getMd5(bytes.data(), bytes.size());
-		sha256 = retdec::crypto::getSha256(bytes.data(), bytes.size());
+		crc32 = retdec::fileformat::getCrc32(bytes.data(), bytes.size());
+		md5 = retdec::fileformat::getMd5(bytes.data(), bytes.size());
+		sha256 = retdec::fileformat::getSha256(bytes.data(), bytes.size());
 	}
 	initStream();
 }
@@ -316,9 +315,9 @@ void FileFormat::computeSectionTableHashes()
 
 	if(!data.empty())
 	{
-		sectionCrc32 = retdec::crypto::getCrc32(data.data(), data.size());
-		sectionMd5 = retdec::crypto::getMd5(data.data(), data.size());
-		sectionSha256 = retdec::crypto::getSha256(data.data(), data.size());
+		sectionCrc32 = retdec::fileformat::getCrc32(data.data(), data.size());
+		sectionMd5 = retdec::fileformat::getMd5(data.data(), data.size());
+		sectionSha256 = retdec::fileformat::getSha256(data.data(), data.size());
 	}
 }
 
@@ -335,7 +334,7 @@ void FileFormat::setLoadedBytes(std::vector<unsigned char> *lBytes)
 
 /**
  * If fileformat is Intel HEX or raw binary then it does not contain
- * critical information like architecture, endianness or word size.
+ * critical information like architecture, endianness or std::uint16_t size.
  * However, fileformat users expect it to contain this information.
  * Therefore, this method needs to be called to set these critical information.
  */
@@ -343,8 +342,8 @@ void FileFormat::initArchitecture(
 		Architecture arch,
 		retdec::utils::Endianness endian,
 		std::size_t bytesPerWord,
-		retdec::utils::Address entryPoint,
-		retdec::utils::Address sectionVMA)
+		retdec::common::Address entryPoint,
+		retdec::common::Address sectionVMA)
 {
 	if(IntelHexFormat *ihex = dynamic_cast<IntelHexFormat*>(this))
 	{
@@ -1773,7 +1772,7 @@ bool FileFormat::isSignatureVerified() const
  * Get non-decodable address ranges.
  * @return Non-decodable address ranges.
  */
-const retdec::utils::RangeContainer<std::uint64_t>& FileFormat::getNonDecodableAddressRanges() const
+const retdec::common::RangeContainer<std::uint64_t>& FileFormat::getNonDecodableAddressRanges() const
 {
 	return nonDecodableRanges;
 }
@@ -2063,8 +2062,8 @@ bool FileFormat::get8ByteOffset(std::uint64_t offset, std::uint64_t &res, retdec
 
 /**
  * Get long double from the specified offset
- * If system has 80-bit (10-byte) long double, copy data directly.
- * Else convert 80-bit (10-byte) long double into 64-bit (8-byte) double.
+ * If system has 80-bit (10 - byte) long double, copy data directly.
+ * Else convert 80-bit (10 - byte) long double into 64-bit (8 - uint8_t) double.
  * @param offset Offset to get double from
  * @param res Result double
  * @return Status of operation (@c true if all is OK, @c false otherwise)
@@ -2338,7 +2337,7 @@ void FileFormat::dump()
 {
 	std::string output;
 	dump(output);
-	std::cout << output;
+	Log::info() << output;
 }
 
 /**
@@ -2563,7 +2562,7 @@ void FileFormat::dumpRegionsValidity()
 {
 	std::string output;
 	dumpRegionsValidity(output);
-	std::cout << output;
+	Log::info() << output;
 }
 
 /**
@@ -2605,7 +2604,7 @@ void FileFormat::dumpResourceTree()
 {
 	std::string output;
 	dumpResourceTree(output);
-	std::cout << output;
+	Log::info() << output;
 }
 
 void FileFormat::dumpResourceTree(std::string &dumpStr)

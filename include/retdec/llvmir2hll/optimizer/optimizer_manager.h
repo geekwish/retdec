@@ -10,7 +10,6 @@
 #include "retdec/llvmir2hll/optimizer/optimizer.h"
 #include "retdec/llvmir2hll/support/smart_ptr.h"
 #include "retdec/llvmir2hll/support/types.h"
-#include "retdec/llvm-support/diagnostics.h"
 #include "retdec/utils/non_copyable.h"
 
 namespace retdec {
@@ -34,7 +33,6 @@ public:
 		ShPtr<HLLWriter> hllWriter, ShPtr<ValueAnalysis> va,
 		ShPtr<CallInfoObtainer> cio, ShPtr<ArithmExprEvaluator> arithmExprEvaluator,
 		bool enableAggressiveOpts, bool enableDebug = false);
-	~OptimizerManager();
 
 	void optimize(ShPtr<Module> m);
 

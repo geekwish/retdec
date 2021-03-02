@@ -7,14 +7,15 @@
 #include <regex>
 
 #include "retdec/utils/conversion.h"
-#include "retdec/utils/filesystem_path.h"
+#include "retdec/utils/filesystem.h"
 #include "retdec/utils/string.h"
 #include "fileinfo/pattern_detector/pattern_detector.h"
-#include "yaracpp/yara_detector/yara_detector.h"
+#include "retdec/yaracpp/yara_detector.h"
 
 using namespace retdec::utils;
-using namespace yaracpp;
+using namespace retdec::yaracpp;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -24,14 +25,6 @@ namespace fileinfo {
  */
 PatternDetector::PatternDetector(const retdec::fileformat::FileFormat *fparser, FileInformation &finfo) :
 	fileParser(fparser), fileinfo(finfo)
-{
-
-}
-
-/**
- * Destructor
- */
-PatternDetector::~PatternDetector()
 {
 
 }
@@ -318,19 +311,21 @@ void PatternDetector::addFilePaths(const std::string &category, const std::set<s
 
 	for(const auto &item : paths)
 	{
-		FilesystemPath actDir(item);
-		if(actDir.isFile())
+		fs::path actDir(item);
+		if(fs::is_regular_file(actDir))
 		{
 			actCategory->second.insert(item);
 			continue;
 		}
 
-		for(const auto &file : actDir)
+		if (fs::is_directory(actDir))
+		for(auto& fileIt: fs::directory_iterator(actDir))
 		{
-			const auto path = file->getPath();
-			if(file->isFile() && (endsWith(path, ".yar") || endsWith(path, ".yara")))
+			auto file = fileIt.path();
+			if(fs::is_regular_file(file)
+					&& (endsWith(file.string(), ".yar") || endsWith(file.string(), ".yara")))
 			{
-				actCategory->second.insert(path);
+				actCategory->second.insert(file.string());
 			}
 		}
 	}
@@ -376,3 +371,4 @@ void PatternDetector::analyze()
 }
 
 } // namespace fileinfo
+} // namespace retdec

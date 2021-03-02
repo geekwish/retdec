@@ -7,45 +7,8 @@
 #include "fileinfo/file_information/file_information_types/file_header.h"
 #include "fileinfo/file_information/file_information_types/type_conversions.h"
 
+namespace retdec {
 namespace fileinfo {
-
-/**
- * Constructor
- */
-FileHeader::FileHeader() : numberOfBitsInByte(std::numeric_limits<unsigned long long>::max()),
-							numberOfBitsInWord(std::numeric_limits<unsigned long long>::max()),
-							fileHeaderSize(std::numeric_limits<unsigned long long>::max()),
-							segmentTableOffset(std::numeric_limits<unsigned long long>::max()),
-							segmentTableEntrySize(std::numeric_limits<unsigned long long>::max()),
-							segmentTableSize(std::numeric_limits<unsigned long long>::max()),
-							numberOfSegments(std::numeric_limits<unsigned long long>::max()),
-							sectionTableOffset(std::numeric_limits<unsigned long long>::max()),
-							sectionTableEntrySize(std::numeric_limits<unsigned long long>::max()),
-							sectionTableSize(std::numeric_limits<unsigned long long>::max()),
-							declNumberOfSections(std::numeric_limits<unsigned long long>::max()),
-							coffFileHeaderSize(std::numeric_limits<unsigned long long>::max()),
-							optionalHeaderSize(std::numeric_limits<unsigned long long>::max()),
-							checksum(std::numeric_limits<unsigned long long>::max()),
-							stackReserveSize(std::numeric_limits<unsigned long long>::max()),
-							stackCommitSize(std::numeric_limits<unsigned long long>::max()),
-							heapReserveSize(std::numeric_limits<unsigned long long>::max()),
-							heapCommitSize(std::numeric_limits<unsigned long long>::max()),
-							numberOfDataDirectories(std::numeric_limits<unsigned long long>::max()),
-							numberOfSymbolTables(std::numeric_limits<unsigned long long>::max()),
-							overlayOffset(std::numeric_limits<unsigned long long>::max()),
-							overlaySize(std::numeric_limits<unsigned long long>::max()),
-							overlayEntropy(std::numeric_limits<double>::min())
-{
-
-}
-
-/**
- * Destructor
- */
-FileHeader::~FileHeader()
-{
-
-}
 
 /**
  * Get time stamp
@@ -740,3 +703,4 @@ void FileHeader::clearDllFlagsDescriptors()
 }
 
 } // namespace fileinfo
+} // namespace retdec

@@ -8,10 +8,10 @@
 #include "retdec/bin2llvmir/utils/capstone.h"
 #include "retdec/utils/string.h"
 
+using namespace llvm;
 using namespace retdec::bin2llvmir::st_match;
 using namespace retdec::capstone2llvmir;
-using namespace retdec::utils;
-using namespace llvm;
+using namespace retdec::common;
 
 namespace retdec {
 namespace bin2llvmir {
@@ -75,7 +75,7 @@ std::size_t Decoder::decodeJumpTargetDryRun_mips(
 		return true;
 	}
 
-	static csh ce = _c2l->getCapstoneEngine();
+	csh ce = _c2l->getCapstoneEngine();
 
 	uint64_t addr = jt.getAddress();
 	std::size_t nops = 0;
@@ -172,7 +172,7 @@ void Decoder::initializeGpReg_mips()
 
 		if (lastStore)
 		{
-			SymbolicTree root(_RDA, lastStore->getValueOperand());
+			auto root = SymbolicTree::OnDemandRda(lastStore->getValueOperand());
 			root.simplifyNode();
 
 			ConstantInt* ci = nullptr;

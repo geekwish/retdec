@@ -9,6 +9,7 @@
 
 #include "retdec/fileformat/types/import_table/import_table.h"
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -17,11 +18,8 @@ namespace fileinfo {
 class ImportTable
 {
 	private:
-		const retdec::fileformat::ImportTable *table;
+		const retdec::fileformat::ImportTable *table = nullptr;
 	public:
-		ImportTable();
-		~ImportTable();
-
 		/// @name Getters
 		/// @{
 		std::size_t getNumberOfLibraries() const;
@@ -52,5 +50,6 @@ class ImportTable
 };
 
 } // namespace fileinfo
+} // namespace retdec
 
 #endif

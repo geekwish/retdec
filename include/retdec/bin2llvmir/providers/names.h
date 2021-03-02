@@ -15,7 +15,7 @@
 #include "retdec/bin2llvmir/providers/demangler.h"
 #include "retdec/bin2llvmir/providers/fileimage.h"
 #include "retdec/bin2llvmir/providers/lti.h"
-#include "retdec/utils/address.h"
+#include "retdec/common/address.h"
 
 namespace retdec {
 namespace bin2llvmir {
@@ -39,22 +39,20 @@ const std::string pseudoReturnFunction         = "__pseudo_return";
 const std::string pseudoBranchFunction         = "__pseudo_branch";
 const std::string pseudoCondBranchFunction     = "__pseudo_cond_branch";
 const std::string pseudoX87dataLoadFunction    = "__frontend_reg_load.fpr";
-const std::string pseudoX87tagLoadFunction     = "__frontend_reg_load.fpu_tag";
 const std::string pseudoX87dataStoreFunction   = "__frontend_reg_store.fpr";
-const std::string pseudoX87tagStoreFunction    = "__frontend_reg_store.fpu_tag";
 
-std::string generateFunctionName(utils::Address a, bool ida = false);
-std::string generateFunctionNameUnknown(utils::Address a, bool ida = false);
+std::string generateFunctionName(common::Address a, bool ida = false);
+std::string generateFunctionNameUnknown(common::Address a, bool ida = false);
 std::string generateGlobalVarName(
-		utils::Address a,
+		common::Address a,
 		const std::string& name = std::string());
 std::string generateStackVarName(
 		int offset,
 		const std::string& name = std::string());
-std::string generateBasicBlockName(utils::Address a);
-std::string generateTempVariableName(utils::Address a, unsigned cntr);
+std::string generateBasicBlockName(common::Address a);
+std::string generateTempVariableName(common::Address a, unsigned cntr);
 std::string generateFunctionNameUndef(unsigned cntr);
-std::string generateVtableName(utils::Address a);
+std::string generateVtableName(common::Address a);
 
 } // namespace names
 
@@ -81,6 +79,8 @@ class Name
 			//
 			DEBUG_FUNCTION,
 			DEBUG_GLOBAL,
+			//
+			LTI_FUNCTION,
 			// Stuff from file image.
 			IMPORT,
 			EXPORT,
@@ -118,7 +118,6 @@ class Name
 	private:
 		std::string _name;
 		eType _type = eType::INVALID;
-		bool _inLti = false;
 };
 
 /**
@@ -163,13 +162,13 @@ class NameContainer
 				Lti* lti = nullptr);
 
 		bool addNameForAddress(
-				retdec::utils::Address a,
+				retdec::common::Address a,
 				const std::string& name,
 				Name::eType type,
 				Lti* lti = nullptr);
 
-		const Names& getNamesForAddress(retdec::utils::Address a);
-		const Name& getPreferredNameForAddress(retdec::utils::Address a);
+		const Names& getNamesForAddress(retdec::common::Address a);
+		const Name& getPreferredNameForAddress(retdec::common::Address a);
 
 	private:
 		void initFromConfig();
@@ -191,7 +190,7 @@ class NameContainer
 		FileImage* _image = nullptr;
 		Lti* _lti = nullptr;
 
-		std::map<retdec::utils::Address, Names> _data;
+		std::map<retdec::common::Address, Names> _data;
 		/// <library name without suffix ".dll", map with ordinals>
 		std::map<std::string, ImportOrdMap> _dllOrds;
 };

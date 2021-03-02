@@ -7,23 +7,8 @@
 #include "fileinfo/file_information/file_information_types/import_table.h"
 #include "fileinfo/file_information/file_information_types/type_conversions.h"
 
+namespace retdec {
 namespace fileinfo {
-
-/**
- * Constructor
- */
-ImportTable::ImportTable() : table(nullptr)
-{
-
-}
-
-/**
- * Destructor
- */
-ImportTable::~ImportTable()
-{
-
-}
 
 /**
  * Get number of libraries in table
@@ -194,3 +179,4 @@ bool ImportTable::hasRecords() const
 }
 
 } // namespace fileinfo
+} // namespace retdec

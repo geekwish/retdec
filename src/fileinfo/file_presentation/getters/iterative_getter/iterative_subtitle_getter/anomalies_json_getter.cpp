@@ -12,6 +12,7 @@
 using namespace retdec::utils;
 using namespace retdec::fileformat;
 
+namespace retdec {
 namespace fileinfo {
 
 /**
@@ -30,14 +31,6 @@ AnomaliesJsonGetter::AnomaliesJsonGetter(FileInformation &fileInfo) : IterativeS
 	commonHeaderElements.push_back("description");
 }
 
-/**
- * Destructor
- */
-AnomaliesJsonGetter::~AnomaliesJsonGetter()
-{
-
-}
-
 std::size_t AnomaliesJsonGetter::getBasicInfo(std::size_t structIndex, std::vector<std::string> &desc, std::vector<std::string> &info) const
 {
 	if(structIndex >= numberOfStructures || fileinfo.getNumberOfAnomalies() == 0)
@@ -49,7 +42,7 @@ std::size_t AnomaliesJsonGetter::getBasicInfo(std::size_t structIndex, std::vect
 	info.clear();
 
 	desc.push_back("numberOfAnomalies");
-	info.push_back(numToStr(fileinfo.getNumberOfAnomalies()));
+	info.push_back(std::to_string(fileinfo.getNumberOfAnomalies()));
 
 	return info.size();
 }
@@ -62,7 +55,7 @@ bool AnomaliesJsonGetter::getRecord(std::size_t structIndex, std::size_t recInde
 	}
 
 	record.clear();
-	record.push_back(numToStr(recIndex));
+	record.push_back(std::to_string(recIndex));
 	record.push_back(fileinfo.getAnomalyIdentifier(recIndex));
 	record.push_back(fileinfo.getAnomalyDescription(recIndex));
 
@@ -83,3 +76,4 @@ bool AnomaliesJsonGetter::getFlags(std::size_t structIndex, std::size_t recIndex
 }
 
 } // namespace fileinfo
+} // namespace retdec

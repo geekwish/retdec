@@ -41,11 +41,6 @@ DeadCodeOptimizer::DeadCodeOptimizer(ShPtr<Module> module,
 	PRECONDITION_NON_NULL(arithmExprEvaluator);
 }
 
-/**
-* @brief Destructs the optimizer.
-*/
-DeadCodeOptimizer::~DeadCodeOptimizer() {}
-
 void DeadCodeOptimizer::visit(ShPtr<IfStmt> stmt) {
 	FuncOptimizer::visit(stmt);
 
@@ -302,7 +297,7 @@ SwitchStmt::clause_iterator DeadCodeOptimizer::
 		findClauseWithCondEqualToControlExpr(ShPtr<SwitchStmt> stmt,
 			ShPtr<Constant> controlExpr) {
 	auto controlExprConstInt = cast<ConstInt>(controlExpr);
-	auto controlExprConstFloat = cast<ConstInt>(controlExpr);
+	auto controlExprConstFloat = cast<ConstFloat>(controlExpr);
 	if (!controlExprConstInt && !controlExprConstFloat) {
 		return stmt->clause_end();
 	}

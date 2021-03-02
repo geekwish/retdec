@@ -68,14 +68,14 @@ class Capstone2LlvmIrTranslator_impl : virtual public Capstone2LlvmIrTranslator
 		virtual TranslationResult translate(
 				const uint8_t* bytes,
 				std::size_t size,
-				retdec::utils::Address a,
+				retdec::common::Address a,
 				llvm::IRBuilder<>& irb,
 				std::size_t count = 0,
 				bool stopOnBranch = false) override;
 		virtual TranslationResultOne translateOne(
 				const uint8_t*& bytes,
 				std::size_t& size,
-				retdec::utils::Address& a,
+				retdec::common::Address& a,
 				llvm::IRBuilder<>& irb) override;
 //
 //==============================================================================
@@ -620,8 +620,8 @@ class Capstone2LlvmIrTranslator_impl : virtual public Capstone2LlvmIrTranslator
 		llvm::GlobalValue::LinkageTypes _regLt =
 				llvm::GlobalValue::LinkageTypes::InternalLinkage;
 
-		/// (insn_id, fnc_type) -> fnc
-		std::map<std::pair<std::size_t, llvm::FunctionType*>, llvm::Function*>
+		/// (fnc_name, fnc_type) -> fnc
+		std::map<std::pair<std::string, llvm::FunctionType*>, llvm::Function*>
 				_insn2asmFunctions;
 		// The same functions as in the map above, but meant for fast search.
 		std::set<llvm::Function*> _asmFunctions;
